@@ -54,7 +54,10 @@ internal static class LocalData
             if (Windows.Storage.ApplicationData.Current.LocalSettings.Values[key] is bool b) return b;
         }
         catch { /* fall through to file */ }
-        var s = ReadFile(key);
+        var s = ReadFile(key)?.Trim();
+        // Accept legacy "1"/"0" files written before v0.1.6-alpha.
+        if (s == "1") return true;
+        if (s == "0") return false;
         return bool.TryParse(s, out bool fb) ? fb : def;
     }
 
@@ -62,7 +65,8 @@ internal static class LocalData
     {
         try { Windows.Storage.ApplicationData.Current.LocalSettings.Values[key] = value; }
         catch { /* file fallback below still persists it */ }
-        WriteFile(key, value ? "1" : "0");
+        // Must be "true"/"false": bool.TryParse (used on read) rejects "1"/"0".
+        WriteFile(key, value ? "true" : "false");
     }
 
     private static string FilePath(string key)

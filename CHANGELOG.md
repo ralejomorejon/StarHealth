@@ -5,6 +5,18 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.1.6-alpha] - 2026-10-07
+
+### Fixed
+- **Notification (and tray) toggles didn't stick on installed builds.**
+  `LocalData` wrote booleans as `"1"`/`"0"` but read them back with
+  `bool.TryParse`, which only accepts `"true"`/`"false"` — so every restart
+  silently reset both toggles to ON and notifications kept showing. Writes
+  are now `"true"`/`"false"`, reads still accept legacy `"1"`/`"0"` files.
+- Verified with a headless round-trip harness against the real `LocalData`
+  in unpackaged conditions (7/7: false/true persist, strings persist,
+  missing-key defaults, legacy `"0"`/`"1"` compat).
+
 ## [v0.1.5-alpha] - 2026-10-07
 
 ### Fixed
