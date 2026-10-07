@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using StarHealth.App.ViewModels;
 using StarHealth.App.Views;
 using StarHealth.Core.Localization;
+using System.IO;
 
 namespace StarHealth.App;
 
@@ -59,7 +60,16 @@ public sealed partial class MainWindow : Window
         var tray = new TrayIconWithContextMenu("StarHealth");
         try
         {
-            _trayIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
+            // Prefer the shipped .ico (the exe itself only carries the default
+            // dotnet icon). Dev layout nests it under AppX/, installed layout
+            // keeps it next to the exe; fall back to the associated icon.
+            var baseDir = AppContext.BaseDirectory;
+            var icoPath = File.Exists(Path.Combine(baseDir, "Assets", "AppIcon.ico"))
+                ? Path.Combine(baseDir, "Assets", "AppIcon.ico")
+                : Path.Combine(baseDir, "AppX", "Assets", "AppIcon.ico");
+            _trayIcon = File.Exists(icoPath)
+                ? new System.Drawing.Icon(icoPath)
+                : System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
             if (_trayIcon is not null) tray.Icon = _trayIcon.Handle;
         }
         catch { }
@@ -77,6 +87,12 @@ public sealed partial class MainWindow : Window
                 DispatcherQueue.TryEnqueue(ShowWindow);
         });
         tray.Create();
+        try
+        {
+            // Belt and suspenders: some shells only pick the icon up on update.
+            if (_trayIcon is not null) tray.UpdateIcon(_trayIcon.Handle);
+        }
+        catch { }
         _tray = tray;
     }
 
