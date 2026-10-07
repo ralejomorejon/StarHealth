@@ -14,23 +14,32 @@
             Padding="28,8,28,32"
             Spacing="18">
 
-            <!-- Héroe: estado como en la app -->
+            <!-- Héroe: estado como en la app, con escena del plato -->
             <Border Background="{StaticResource DishCard}" CornerRadius="16">
-                <StackPanel Padding="24,28" Spacing="2">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Ellipse
-                            Width="12"
-                            Height="12"
-                            VerticalAlignment="Center"
-                            Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}" />
-                        <TextBlock
-                            FontSize="40"
-                            FontWeight="SemiBold"
-                            Foreground="White"
-                            Text="{x:Bind Vm.StatusText, Mode=OneWay}" />
+                <Grid>
+                    <controls:DishHero
+                        Height="300"
+                        Beam="{x:Bind Vm.HeroBeam, Mode=OneWay}"
+                        Tilt="{x:Bind Vm.HeroTilt, Mode=OneWay}" />
+                    <StackPanel
+                        Padding="24,24"
+                        VerticalAlignment="Top"
+                        Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Ellipse
+                                Width="12"
+                                Height="12"
+                                VerticalAlignment="Center"
+                                Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}" />
+                            <TextBlock
+                                FontSize="40"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.StatusText, Mode=OneWay}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.StatusDetail, Mode=OneWay}" />
                     </StackPanel>
-                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.StatusDetail, Mode=OneWay}" />
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Aviso ámbar como el de la app -->

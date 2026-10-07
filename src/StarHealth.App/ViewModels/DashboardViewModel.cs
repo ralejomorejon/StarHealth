@@ -103,6 +103,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private List<double> latencySeries = new();
     [ObservableProperty] private List<double> powerSeries = new();
     [ObservableProperty] private double powerMax = 60;
+    [ObservableProperty] private double heroTilt = 15;
+    [ObservableProperty] private int heroBeam;
     [ObservableProperty] private bool notificationsEnabled = LoadBool("notify", true);
     [ObservableProperty] private bool trayEnabled = LoadBool("tray", true);
     [ObservableProperty] private bool showBriefEvents = true;
@@ -707,6 +709,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         PowerText = s.Power.Watts is null ? "n/d"
             : s.Power.IsEstimate ? $"~{s.Power.Watts:F0} W (est.)" : $"{s.Power.Watts:F1} W";
         PowerNote = s.Power.Source ?? "";
+
+        HeroTilt = s.Alignment.TiltDeg ?? 15;
+        HeroBeam = s.State != DishState.Connected ? Controls.DishHeroScene.BeamBad
+            : s.Obstruction.FractionObstructed >= 0.02 ? Controls.DishHeroScene.BeamWarn
+            : Controls.DishHeroScene.BeamOk;
 
         HardwareText = s.Device.HardwareVersion;
         SoftwareText = s.Device.SoftwareVersion;
