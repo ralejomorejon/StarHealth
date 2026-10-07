@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.HelpPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('help.title'), Mode=OneWay}" />
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('help.official'), Mode=OneWay}" />
+                    <HyperlinkButton Content="support.starlink.com" NavigateUri="https://support.starlink.com/" />
+                    <HyperlinkButton Content="192.168.100.1" NavigateUri="http://192.168.100.1/" />
+                    <TextBlock Style="{StaticResource DishSubValue}" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('help.chat'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('help.about'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('help.body'), Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.EndpointText}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="StarHealth.App.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Starlink-inspired minimal dark theme. Only ThemeResource-free
+                 explicit brushes: identical XAML works on Uno targets. -->
+            <Color x:Key="DishBackgroundColor">#0B0D10</Color>
+            <Color x:Key="DishCardColor">#14181D</Color>
+            <Color x:Key="DishCardBorderColor">#232A33</Color>
+            <Color x:Key="DishAccentColor">#FFFFFF</Color>
+            <Color x:Key="DishDimColor">#8A94A3</Color>
+            <Color x:Key="DishUpColor">#5B8DEF</Color>
+            <Color x:Key="DishWarnColor">#E8B44F</Color>
+            <Color x:Key="DishBadColor">#E56B6B</Color>
+            <Color x:Key="DishGoodColor">#6FD598</Color>
+
+            <SolidColorBrush x:Key="DishBackground" Color="{StaticResource DishBackgroundColor}" />
+            <SolidColorBrush x:Key="DishCard" Color="{StaticResource DishCardColor}" />
+            <SolidColorBrush x:Key="DishCardBorder" Color="{StaticResource DishCardBorderColor}" />
+            <SolidColorBrush x:Key="DishDim" Color="{StaticResource DishDimColor}" />
+            <SolidColorBrush x:Key="DishUp" Color="{StaticResource DishUpColor}" />
+            <SolidColorBrush x:Key="DishWarn" Color="{StaticResource DishWarnColor}" />
+            <SolidColorBrush x:Key="DishBad" Color="{StaticResource DishBadColor}" />
+            <SolidColorBrush x:Key="DishGood" Color="{StaticResource DishGoodColor}" />
+
+            <Style x:Key="DishCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource DishCard}" />
+                <Setter Property="BorderBrush" Value="{StaticResource DishCardBorder}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <Style x:Key="DishCardTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{StaticResource DishDim}" />
+                <Setter Property="CharacterSpacing" Value="120" />
+            </Style>
+
+            <Style x:Key="DishBigValue" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="28" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="White" />
+            </Style>
+
+            <Style x:Key="DishSubValue" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{StaticResource DishDim}" />
+            </Style>
+
+            <!-- Etiquetas de fuente de datos: de dónde sale cada dato -->
+            <Style x:Key="SourceTag" TargetType="Border">
+                <Setter Property="Padding" Value="8,2" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="SourceTagDish" TargetType="Border" BasedOn="{StaticResource SourceTag}">
+                <Setter Property="Background" Value="#1B2E22" />
+                <Setter Property="BorderBrush" Value="{StaticResource DishGood}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+            <Style x:Key="SourceTagRouter" TargetType="Border" BasedOn="{StaticResource SourceTag}">
+                <Setter Property="Background" Value="#1A2740" />
+                <Setter Property="BorderBrush" Value="{StaticResource DishUp}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+            <Style x:Key="SourceTagAccount" TargetType="Border" BasedOn="{StaticResource SourceTag}">
+                <Setter Property="Background" Value="#2A2118" />
+                <Setter Property="BorderBrush" Value="{StaticResource DishWarn}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+            <Style x:Key="SourceTagDerived" TargetType="Border" BasedOn="{StaticResource SourceTag}">
+                <Setter Property="Background" Value="#22262C" />
+                <Setter Property="BorderBrush" Value="{StaticResource DishDim}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+            <Style x:Key="SourceTagText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Foreground" Value="White" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

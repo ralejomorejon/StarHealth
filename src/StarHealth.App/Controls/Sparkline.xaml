@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="StarHealth.App.Controls.Sparkline"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Canvas
+        x:Name="SparCanvas"
+        Background="Transparent"
+        PointerExited="OnPointerExited"
+        PointerMoved="OnPointerMoved"
+        SizeChanged="OnSizeChanged">
+        <Polyline x:Name="Line" Stroke="White" StrokeThickness="1.5" />
+        <Line
+            x:Name="HoverLine"
+            Stroke="#8A94A3"
+            StrokeThickness="1"
+            Visibility="Collapsed" />
+        <Border
+            x:Name="HoverCard"
+            Padding="6"
+            Background="#1E242C"
+            BorderBrush="#3A4452"
+            BorderThickness="1"
+            CornerRadius="6"
+            Visibility="Collapsed">
+            <TextBlock x:Name="HoverValue" FontSize="12" Foreground="White" />
+        </Border>
+    </Canvas>
+</UserControl>

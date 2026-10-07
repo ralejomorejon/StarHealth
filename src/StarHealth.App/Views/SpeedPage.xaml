@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.SpeedPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('spd.title'), Mode=OneWay}" />
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('spd.dl'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDerived}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.local'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{x:Bind Vm.SpeedResultText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Left"
+                        Command="{x:Bind Vm.RunSpeedTestCommand}"
+                        Content="{x:Bind Vm.SpeedButtonText, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('spd.note'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('spd.cont'), Mode=OneWay}" />
+                    <StackPanel Orientation="Horizontal" Spacing="24">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock
+                                FontSize="30"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.DownText, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Bottom"
+                                Foreground="{StaticResource DishDim}"
+                                Text="Mbps ↓" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock
+                                FontSize="30"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.UpText, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Bottom"
+                                Foreground="{StaticResource DishDim}"
+                                Text="Mbps ↑" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('spd.cont.note'), Mode=OneWay}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

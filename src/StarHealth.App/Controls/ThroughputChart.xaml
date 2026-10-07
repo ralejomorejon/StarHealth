@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="StarHealth.App.Controls.ThroughputChart"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Grid>
+        <Canvas
+            x:Name="ChartCanvas"
+            Background="Transparent"
+            PointerExited="OnPointerExited"
+            PointerMoved="OnPointerMoved"
+            SizeChanged="OnSizeChanged">
+            <Line x:Name="Grid1" Stroke="#232A33" StrokeThickness="1" />
+            <Line x:Name="Grid2" Stroke="#232A33" StrokeThickness="1" />
+            <Line x:Name="Grid3" Stroke="#232A33" StrokeThickness="1" />
+            <Polyline x:Name="UpLine" Stroke="#5B8DEF" StrokeThickness="1.5" />
+            <Polyline x:Name="DownLine" Stroke="White" StrokeThickness="2" />
+            <Line
+                x:Name="HoverLine"
+                Stroke="#8A94A3"
+                StrokeThickness="1"
+                Visibility="Collapsed" />
+            <Border
+                x:Name="HoverCard"
+                Padding="8"
+                Background="#1E242C"
+                BorderBrush="#3A4452"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="Collapsed">
+                <StackPanel Spacing="2">
+                    <TextBlock x:Name="HoverTime" FontSize="11" Foreground="#8A94A3" />
+                    <TextBlock x:Name="HoverDown" FontSize="12" Foreground="White" />
+                    <TextBlock x:Name="HoverUp" FontSize="12" Foreground="#5B8DEF" />
+                </StackPanel>
+            </Border>
+        </Canvas>
+        <TextBlock
+            x:Name="MaxLabel"
+            Margin="4,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            FontSize="11"
+            Foreground="#8A94A3" />
+        <StackPanel
+            Margin="0,0,4,2"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal"
+            Spacing="12">
+            <TextBlock FontSize="11" Foreground="White" Text="— down" />
+            <TextBlock FontSize="11" Foreground="#5B8DEF" Text="— up" />
+        </StackPanel>
+    </Grid>
+</UserControl>

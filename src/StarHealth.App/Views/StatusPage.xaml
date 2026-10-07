@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.StatusPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StarHealth.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <!-- Héroe: estado como en la app -->
+            <Border Background="{StaticResource DishCard}" CornerRadius="16">
+                <StackPanel Padding="24,28" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Ellipse
+                            Width="12"
+                            Height="12"
+                            VerticalAlignment="Center"
+                            Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}" />
+                        <TextBlock
+                            FontSize="40"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="{x:Bind Vm.StatusText, Mode=OneWay}" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.StatusDetail, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Aviso ámbar como el de la app -->
+            <Border
+                Padding="20"
+                Background="#241C10"
+                BorderBrush="{StaticResource DishWarn}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{x:Bind Vm.AlignmentNoticeVisibility, Mode=OneWay}">
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        FontSize="22"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{x:Bind Vm.AlignmentNoticeText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        Command="{x:Bind Vm.AlignCommand}"
+                        Content="{x:Bind Vm.Tr('cta.align'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="12"
+                Background="#2A2118"
+                BorderBrush="{StaticResource DishWarn}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{x:Bind Vm.ErrorVisibility, Mode=OneWay}">
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{StaticResource DishWarn}"
+                    Text="{x:Bind Vm.LastErrorText, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+            </Border>
+
+            <!-- Tarjetas de la app, en rejilla de escritorio -->
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('card.ping'), Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource DishBigValue}" Text="{x:Bind Vm.PingSuccessText, Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('card.ping.sub'), Mode=OneWay}" />
+                        <controls:Sparkline
+                            Height="44"
+                            Max="100"
+                            Unit="%"
+                            Values="{x:Bind Vm.PingSeries, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('card.lat'), Mode=OneWay}" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Style="{StaticResource DishBigValue}" Text="{x:Bind Vm.MedianLatencyText, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Bottom"
+                                Foreground="{StaticResource DishDim}"
+                                Text="ms" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('card.lat.sub'), Mode=OneWay}" />
+                        <controls:Sparkline Height="44" Unit="ms" Values="{x:Bind Vm.LatencySeries, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('card.throughput'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDish}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.dish'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="24">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock
+                                FontSize="30"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.DownText, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Bottom"
+                                Foreground="{StaticResource DishDim}"
+                                Text="Mbps ↓" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock
+                                FontSize="30"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.UpText, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Bottom"
+                                Foreground="{StaticResource DishDim}"
+                                Text="Mbps ↑" />
+                        </StackPanel>
+                    </StackPanel>
+                    <controls:ThroughputChart
+                        Height="140"
+                        Max="{x:Bind Vm.ChartMax, Mode=OneWay}"
+                        Samples="{x:Bind Vm.Samples, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('card.obst'), Mode=OneWay}" />
+                        <TextBlock
+                            Style="{StaticResource DishBigValue}"
+                            Text="{x:Bind Vm.ObstructionText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                        <ProgressBar Maximum="100" Value="{x:Bind Vm.ObstructionPct, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('card.align'), Mode=OneWay}" />
+                        <TextBlock
+                            FontSize="17"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="{x:Bind Vm.AlignmentTitle, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Style="{StaticResource DishSubValue}"
+                            Text="{x:Bind Vm.AlignmentSub, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

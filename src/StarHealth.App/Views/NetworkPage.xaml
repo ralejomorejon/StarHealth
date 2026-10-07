@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.NetworkPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('net.title'), Mode=OneWay}" />
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('net.dish'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDish}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.dish'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Foreground="White" Text="{x:Bind Vm.EndpointText}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.DishReachableText, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('net.eth'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" Text="{x:Bind Vm.EthText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('net.router'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagRouter}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.router'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Foreground="White" Text="{x:Bind Vm.Tr('net.router.name'), Mode=OneWay}" />
+                    <TextBlock
+                        Foreground="White"
+                        Text="{x:Bind RouterResult, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <Button Click="OnCheckRouter" Content="{x:Bind Vm.Tr('net.router.check'), Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('net.router.note'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

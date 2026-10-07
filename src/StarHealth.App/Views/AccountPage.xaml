@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.AccountPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('acct.title'), Mode=OneWay}" />
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('acct.plan'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDerived}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.dev'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('acct.plan.note'), Mode=OneWay}" TextWrapping="Wrap" />
+                    <TextBox Header="{x:Bind Vm.Tr('acct.plan.header'), Mode=OneWay}" Text="{x:Bind Vm.PlanName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('acct.only'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagAccount}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.acct'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('acct.b1'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('acct.b2'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('acct.b3'), Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('acct.note'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

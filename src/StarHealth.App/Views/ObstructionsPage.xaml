@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.ObstructionsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StarHealth.App.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('obst.title'), Mode=OneWay}" />
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('obst.total'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDish}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.dish'), Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource DishBigValue}" Text="{x:Bind Vm.ObstructionText, Mode=OneWay}" TextWrapping="Wrap" />
+                    <ProgressBar Maximum="100" Value="{x:Bind Vm.ObstructionPct, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.ProlongedText, Mode=OneWay}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('obst.wedges'), Mode=OneWay}" />
+                    <ItemsControl ItemsSource="{x:Bind Vm.WedgeRows, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="12" Padding="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Foreground="White"
+                                        Text="{Binding Label}" />
+                                    <ProgressBar
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Maximum="100"
+                                        Value="{Binding BarPct}" />
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        Foreground="{StaticResource DishDim}"
+                                        Text="{Binding ValueText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border
+                        Padding="12"
+                        Background="#22262C"
+                        CornerRadius="8"
+                        Visibility="{x:Bind Vm.WedgesNoteVisibility, Mode=OneWay}">
+                        <TextBlock
+                            FontSize="13"
+                            Foreground="{StaticResource DishDim}"
+                            Text="{x:Bind Vm.Tr('obst.wedges.note'), Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Borrador de la bóveda celeste estilo app oficial; el heatmap queda desactivado de momento -->
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('obst.map'), Mode=OneWay}" />
+                    <Grid
+                        Height="320"
+                        HorizontalAlignment="Center"
+                        Opacity="0.55">
+                        <Ellipse
+                            Width="300"
+                            Height="300"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Stroke="#3A4452"
+                            StrokeThickness="2" />
+                        <Ellipse
+                            Width="200"
+                            Height="200"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Stroke="#2A313B"
+                            StrokeThickness="1" />
+                        <Ellipse
+                            Width="100"
+                            Height="100"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Stroke="#2A313B"
+                            StrokeThickness="1" />
+                        <Ellipse
+                            Width="12"
+                            Height="12"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Fill="#3A4452" />
+                        <Line
+                            Stroke="#2A313B"
+                            StrokeThickness="1"
+                            X1="10"
+                            X2="310"
+                            Y1="160"
+                            Y2="160" />
+                        <Line
+                            Stroke="#2A313B"
+                            StrokeThickness="1"
+                            X1="160"
+                            X2="160"
+                            Y1="10"
+                            Y2="310" />
+                        <Line
+                            Stroke="#232A33"
+                            StrokeThickness="1"
+                            X1="54"
+                            X2="266"
+                            Y1="54"
+                            Y2="266" />
+                        <Line
+                            Stroke="#232A33"
+                            StrokeThickness="1"
+                            X1="266"
+                            X2="54"
+                            Y1="54"
+                            Y2="266" />
+                    </Grid>
+                    <Border
+                        Margin="0,-200,0,0"
+                        Padding="16,8"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#1E242C"
+                        BorderBrush="#3A4452"
+                        BorderThickness="1"
+                        CornerRadius="10">
+                        <TextBlock
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="#8A94A3"
+                            Text="{x:Bind Vm.Tr('obst.map.soon'), Mode=OneWay}" />
+                    </Border>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource DishSubValue}"
+                        Text="{x:Bind Vm.Tr('obst.map.caption'), Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

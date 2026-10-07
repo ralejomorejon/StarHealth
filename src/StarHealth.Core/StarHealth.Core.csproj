@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- No UI dependencies: this assembly must stay portable so the
+         same code runs on WinUI 3 today and Uno Platform (Android/iOS/
+         macOS/Linux/Web) tomorrow without changes. -->
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StarHealth.App/StarHealth.App.csproj" />
+    <Project Path="src/StarHealth.Core/StarHealth.Core.csproj" />
+    <Project Path="src/StarHealth.Data.Grpc/StarHealth.Data.Grpc.csproj" />
+  </Folder>
+</Solution>

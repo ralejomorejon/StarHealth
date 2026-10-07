@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="StarHealth.App.Views.AlignmentPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+        <StackPanel x:Name="Root"
+            MaxWidth="1060"
+            Padding="28,8,28,32"
+            Spacing="18">
+
+            <TextBlock
+                FontSize="26"
+                FontWeight="SemiBold"
+                Foreground="White"
+                Text="{x:Bind Vm.Tr('align.title'), Mode=OneWay}" />
+
+            <Border
+                Padding="20"
+                Background="#241C10"
+                BorderBrush="{StaticResource DishWarn}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="{x:Bind Vm.AlignmentNoticeVisibility, Mode=OneWay}">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{x:Bind Vm.AlignmentNoticeText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Style="{StaticResource DishSubValue}"
+                        Text="{x:Bind Vm.Tr('align.notice.sub'), Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('align.current'), Mode=OneWay}" />
+                        <Border Style="{StaticResource SourceTagDish}">
+                            <TextBlock Style="{StaticResource SourceTagText}" Text="ANTENA · LOCAL" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock
+                        FontSize="24"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{x:Bind Vm.AlignmentTitle, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Foreground="White"
+                        Text="{x:Bind Vm.AlignmentTargetText, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Style="{StaticResource DishSubValue}"
+                        Text="{x:Bind Vm.AlignmentSub, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('align.guide'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('align.g1'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('align.g2'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('align.g3'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('align.g4'), Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" TextWrapping="Wrap" Text="{x:Bind Vm.Tr('align.gnote'), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

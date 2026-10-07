@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "StarHealth.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "StarHealth.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
