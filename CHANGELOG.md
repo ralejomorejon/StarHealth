@@ -5,6 +5,19 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Dish hero motion (OrbitControls parity).** The loop ran at ~30 fps off
+  vsync and physics was per-tick, so movement stuttered; release velocity
+  came from raw per-event pixels, so flings varied with mouse poll rate and
+  elevation had no inertia at all; vertical drags also scrolled the page
+  because pointer events were never marked handled. Now: ~60 fps loop,
+  time-based exponential damping (deg/sec) on both axes with poll-rate
+  independent release velocity, `e.Handled` during drags, grab/move pointer
+  cursors, idle drift at autoRotate-like 10°/s. Matches the official app's
+  damped-orbit feel within what CPU SkiaSharp rendering allows.
+
 ## [v0.1.7-alpha] - 2026-10-07
 
 ### Added
