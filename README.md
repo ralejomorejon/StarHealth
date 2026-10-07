@@ -12,7 +12,13 @@ Download **StarHealth-Setup-*-win-x64.exe** from
 [Releases](https://github.com/ralejomorejon/StarHealth/releases)
 and run it — no extra runtimes needed (self-contained, 64-bit Windows).
 Unsigned alpha: Windows SmartScreen will warn on first launch.
-Run it on the same LAN as your dish (`192.168.100.1`).
+
+**To launch the app after install:**
+1. Find the StarHealth App shortcut in the Start menu or on the desktop
+2. Right-click the shortcut → **Properties**
+3. Click the **Unblock** button (bottom-right, if available)
+4. Alternatively, click **More info** → **Run anyway** when the SmartScreen warning appears
+5. The app will then launch normally
 
 ## Monitor behavior
 
