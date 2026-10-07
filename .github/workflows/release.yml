@@ -43,3 +43,5 @@ jobs:
           body: |
             StarHealth v0.1.1-alpha
             Windows installer (self-contained, WinUI 3)
+
+            **First launch:** Windows SmartScreen may warn (unsigned alpha). Right-click the app shortcut → **Properties** → **Unblock**, or click **More info** → **Run anyway**.
