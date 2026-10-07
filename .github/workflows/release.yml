@@ -41,5 +41,5 @@ jobs:
           generate_release_notes: false
           name: "${{ github.ref_name }}"
           body: |
-            [Changelog](CHANGELOG.md)
-          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'test') }}
+            StarHealth v0.1.1-alpha
+            Windows installer (self-contained, WinUI 3)
