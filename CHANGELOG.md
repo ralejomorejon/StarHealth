@@ -5,6 +5,23 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.1.5-alpha] - 2026-10-07
+
+### Fixed
+- **Installed app showed no icon (taskbar, window, tray).** Two root causes:
+  `Assets/AppIcon.ico` never reached unpackaged publish output (verified
+  missing), so `SetIcon` silently no-opped and the tray probe fell through —
+  and the exe itself carried only the default dotnet icon, so even the
+  fallback was wrong.
+- `Assets\AppIcon.ico` is now embedded as the Win32 exe icon
+  (`ApplicationIcon`: taskbar, Alt-Tab, Explorer, installer shortcuts, and
+  the tray fallback all use it) and also copied next to the exe
+  (`CopyToPublishDirectory`, picked up automatically by the Inno script's
+  recursive publish-dir include), so `SetIcon` and the tray's first probe
+  path both hit the real file.
+- Verified against a Release publish: `Assets\AppIcon.ico` ships, app holds
+  its window 30 s with the icon paths live.
+
 ## [v0.1.4-alpha] - 2026-10-07
 
 ### Fixed

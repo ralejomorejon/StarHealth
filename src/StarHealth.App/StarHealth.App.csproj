@@ -13,6 +13,10 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Embed as the Win32 exe icon (taskbar, Alt-Tab, Explorer, installer
+         shortcuts, and the tray fallback all use it). Without this the exe
+         carries the default dotnet icon and the installed app looks iconless. -->
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +27,11 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
     <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\AppIcon.ico" />
+    <!-- Ship next to the exe: MainWindow.SetIcon + the tray probe resolve it
+         as Assets/AppIcon.ico relative to the install dir. WinUI Content items
+         don't reach unpackaged publish output on their own (verified: publish
+         had no Assets/ folder, so SetIcon silently no-opped). -->
+    <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
 
