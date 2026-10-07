@@ -6,6 +6,14 @@ Obstrucciones, Alineación, Prueba de velocidad, Configuración, Asistencia), wi
 every datum labeled by source. Cross-OS ready: all dish logic lives in UI-free
 libraries that move unchanged into an Uno Platform head.
 
+## Install (regular Windows users)
+
+Download **StarHealth-Setup-0.1.0-alpha-win-x64.exe** from
+[Releases](https://github.com/ralejomorejon/StarHealth/releases/tag/v0.1.0-alpha)
+and run it — no extra runtimes needed (self-contained, 64-bit Windows).
+Unsigned alpha: Windows SmartScreen will warn on first launch.
+Run it on the same LAN as your dish (`192.168.100.1`).
+
 ## Where each datum comes from (read this)
 
 The official app mixes three sources. This app reads the first, parts of the
