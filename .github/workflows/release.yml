@@ -1,0 +1,42 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish self-contained app
+        run: >
+          dotnet publish src/StarHealth.App/StarHealth.App.csproj
+          -c Release -r win-x64 --self-contained
+          -p:WindowsAppSDKSelfContained=true --nologo -v q
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: >
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          /DAppVersion="${{ github.ref_name }}"
+          installer/StarHealth.iss
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/output/*.exe
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'test') }}

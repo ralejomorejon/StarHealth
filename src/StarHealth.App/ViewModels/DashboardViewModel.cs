@@ -29,6 +29,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 {
     private readonly Func<DishEndpointOptions, IDishClient> _clientFactory;
     private readonly IDishClient _fallbackClient;
+    private readonly StarHealth.Data.Store.HistoryStore _store;
     private DishPollingService _poller;
     private IDisposable? _primaryClient;
     private readonly DispatcherQueue _dq = DispatcherQueue.GetForCurrentThread();
@@ -39,6 +40,38 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     /// <summary>Set by the shell: tag of the page to open from the alignment CTA.</summary>
     public Action<string>? Navigate { get; set; }
+    public Action<string>? TrayUpdate { get; set; }
+    public event Action? TraySettingsChanged;
+
+    private bool? _wasReachable;
+    private readonly HashSet<string> _seenOutages = new();
+    private bool _updateToasted;
+    private string? _lastNotice;
+    private DateTime _lastToast = DateTime.MinValue;
+
+    partial void OnNotificationsEnabledChanged(bool value) => SaveBool("notify", value);
+    partial void OnTrayEnabledChanged(bool value)
+    {
+        SaveBool("tray", value);
+        TraySettingsChanged?.Invoke();
+    }
+
+    private static bool LoadBool(string key, bool def)
+    {
+        try
+        {
+            var v = Windows.Storage.ApplicationData.Current.LocalSettings.Values[key];
+            if (v is bool b) return b;
+        }
+        catch { }
+        return def;
+    }
+
+    private static void SaveBool(string key, bool value)
+    {
+        try { Windows.Storage.ApplicationData.Current.LocalSettings.Values[key] = value; }
+        catch { }
+    }
 
     /// <summary>XAML static-text lookup: Text="{x:Bind Vm.Tr('nav.status')}".</summary>
     public string Tr(string key) => Text.Get(key);
@@ -70,6 +103,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private List<double> latencySeries = new();
     [ObservableProperty] private List<double> powerSeries = new();
     [ObservableProperty] private double powerMax = 60;
+    [ObservableProperty] private bool notificationsEnabled = LoadBool("notify", true);
+    [ObservableProperty] private bool trayEnabled = LoadBool("tray", true);
     [ObservableProperty] private bool showBriefEvents = true;
     [ObservableProperty] private double obstructionPct;
     [ObservableProperty] private string obstructionText = "—";
@@ -108,8 +143,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private Visibility errorVisibility = Visibility.Collapsed;
     [ObservableProperty] private Visibility alertsVisibility = Visibility.Collapsed;
     [ObservableProperty] private Visibility noAlertsVisibility = Visibility.Visible;
+    [ObservableProperty] private int historyRange;
+    [ObservableProperty] private IReadOnlyList<ThroughputSample> chartSamples = new List<ThroughputSample>();
     [ObservableProperty] private IReadOnlyList<ThroughputSample> samples = new List<ThroughputSample>();
     [ObservableProperty] private double chartMax = 100;
+    [ObservableProperty] private string sla24Text = "—";
+    [ObservableProperty] private string sla7Text = "—";
+    [ObservableProperty] private string reportStatusText = "";
     [ObservableProperty] private string planName = LoadPlan();
     [ObservableProperty] private string speedResultText = Text.Get("spd.none");
     [ObservableProperty] private string speedButtonText = Text.Get("spd.start");
@@ -139,10 +179,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     public bool CanTest => !Testing;
 
-    public DashboardViewModel(Func<DishEndpointOptions, IDishClient> clientFactory, IDishClient fallback)
+    public DashboardViewModel(Func<DishEndpointOptions, IDishClient> clientFactory, IDishClient fallback, StarHealth.Data.Store.HistoryStore store)
     {
         _clientFactory = clientFactory;
         _fallbackClient = fallback;
+        _store = store;
         try
         {
             var l = Windows.Storage.ApplicationData.Current.LocalSettings.Values["lang"] as string;
@@ -252,6 +293,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(EndpointText));
         OnPropertyChanged(nameof(HasMultipleDishes));
         Start();
+        _ = RefreshHistoryAsync();
     }
 
     partial void OnSelectedDishNameChanged(string value)
@@ -348,6 +390,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         if (_loop is not null) return;
         _cts = new CancellationTokenSource();
         _loop = LoopAsync(_cts.Token);
+        _ = RefreshHistoryAsync();
     }
 
     public void Dispose()
@@ -479,6 +522,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         }
     }
 
+    private int _pollCount;
+
     private async Task PollAsync(CancellationToken ct)
     {
         try { await _poller.PollOnceAsync(ct).ConfigureAwait(false); }
@@ -488,42 +533,109 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         if (snap is null) return;
         var fallback = _poller.UsingFallback;
         var err = _poller.LastError;
+        _ = _store.RecordAsync(_activeEndpoint.Name, snap);
         _dq.TryEnqueue(() => Apply(snap, fallback, err));
+        if (++_pollCount % 10 == 0 && HistoryRange != 0)
+            await RefreshHistoryAsync().ConfigureAwait(false);
     }
 
-    private static string StateText(DishState s) => Text.Get("state." + s switch
-    {
-        DishState.Connected => "connected",
-        DishState.Searching => "searching",
-        DishState.Booting => "booting",
-        DishState.Stowed => "stowed",
-        DishState.Sleeping => "sleeping",
-        DishState.Obstructed => "obstructed",
-        DishState.NoSatellites => "nosats",
-        DishState.NoSignal => "nosignal",
-        DishState.ThermalShutdown => "thermal",
-        DishState.Offline => "offline",
-        _ => "unknown",
-    });
+    partial void OnHistoryRangeChanged(int value) => _ = RefreshHistoryAsync();
 
-    private static string CauseText(OutageCause c) => Text.Get("cause." + c switch
+    private static long HoursAgo(int h) => DateTimeOffset.UtcNow.AddHours(-h).ToUnixTimeMilliseconds();
+
+    [RelayCommand]
+    private async Task RefreshHistoryAsync()
     {
-        OutageCause.Obstructed => "obstructed",
-        OutageCause.NoSatellites => "nosats",
-        OutageCause.ThermalShutdown => "thermal",
-        OutageCause.ThermalThrottle => "throttle",
-        OutageCause.SoftwareUpdate => "update",
-        OutageCause.NetworkIssue => "network",
-        OutageCause.PowerDip => "power",
-        OutageCause.Booting => "booting",
-        OutageCause.Stowed => "stowed",
-        OutageCause.Sleeping => "sleeping",
-        OutageCause.SkySearch => "skysearch",
-        OutageCause.ActuatorActivity => "actuator",
-        OutageCause.CableTest => "cable",
-        OutageCause.Inhibited => "inhibited",
-        _ => "unknown",
-    });
+        var dish = _activeEndpoint.Name;
+        try
+        {
+            if (HistoryRange == 0)
+            {
+                var ring = _poller.Latest?.History ?? new List<ThroughputSample>();
+                _dq.TryEnqueue(() =>
+                {
+                    ChartSamples = ring;
+                    ChartMax = Math.Max(50, ring.Select(p => p.DownMbps).DefaultIfEmpty(50).Max() * 1.2);
+                });
+            }
+            else
+            {
+                long from = HoursAgo(HistoryRange == 1 ? 24 : 24 * 7);
+                var rows = await _store.GetSeriesAsync(dish, from).ConfigureAwait(false);
+                var list = rows.Select(r => new ThroughputSample(
+                    DateTimeOffset.FromUnixTimeMilliseconds(r.Ts),
+                    r.Down, r.Up, r.Lat, r.Drop, false, r.Power)).ToList();
+                _dq.TryEnqueue(() =>
+                {
+                    ChartSamples = list;
+                    ChartMax = Math.Max(50, list.Select(p => p.DownMbps).DefaultIfEmpty(50).Max() * 1.2);
+                });
+            }
+            var sla24 = await _store.GetAvailabilityAsync(dish, HoursAgo(24)).ConfigureAwait(false);
+            var sla7 = await _store.GetAvailabilityAsync(dish, HoursAgo(24 * 7)).ConfigureAwait(false);
+            _dq.TryEnqueue(() =>
+            {
+                Sla24Text = $"{sla24.Ratio * 100:F2}% · {sla24.Samples}";
+                Sla7Text = $"{sla7.Ratio * 100:F2}% · {sla7.Samples}";
+            });
+        }
+        catch { /* history panel stays as-is on DB errors */ }
+    }
+
+    private string HistoryRangeLabel() => HistoryRange switch
+    {
+        1 => Text.Get("hist.range.24h"),
+        2 => Text.Get("hist.range.7d"),
+        _ => Text.Get("hist.range.24h"),
+    };
+
+    private long HistoryRangeFrom() => HistoryRange == 2 ? HoursAgo(24 * 7) : HoursAgo(24);
+
+    [RelayCommand]
+    private async Task CopyReportAsync()
+    {
+        try
+        {
+            var report = await _store.BuildReportAsync(
+                _activeEndpoint.Name, HistoryRangeLabel(), HistoryRangeFrom()).ConfigureAwait(false);
+            _dq.TryEnqueue(() =>
+            {
+                var pkg = new Windows.ApplicationModel.DataTransfer.DataPackage();
+                pkg.SetText(report);
+                Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(pkg);
+                ReportStatusText = Text.Get("rpt.copied");
+            });
+        }
+        catch (Exception ex)
+        {
+            _dq.TryEnqueue(() => ReportStatusText = Text.Get("spd.fail") + ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveReportAsync()
+    {
+        try
+        {
+            var report = await _store.BuildReportAsync(
+                _activeEndpoint.Name, HistoryRangeLabel(), HistoryRangeFrom()).ConfigureAwait(false);
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "StarHealth");
+            Directory.CreateDirectory(dir);
+            var file = Path.Combine(dir,
+                $"starhealth-informe-{DateTime.Now:yyyyMMdd-HHmmss}.txt");
+            await File.WriteAllTextAsync(file, report).ConfigureAwait(false);
+            _dq.TryEnqueue(() => ReportStatusText = Text.Get("rpt.saved") + file);
+        }
+        catch (Exception ex)
+        {
+            _dq.TryEnqueue(() => ReportStatusText = Text.Get("spd.fail") + ex.Message);
+        }
+    }
+
+    private static string StateText(DishState s) => Text.State(s);
+
+    private static string CauseText(OutageCause c) => Text.Cause(c);
 
     private void Apply(DishSnapshot s, bool fallback, string? error)
     {
@@ -657,11 +769,69 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         EthText = s.EthSpeedMbps is int eth ? $"{eth} Mbps" : Text.Get("net.eth.none");
 
         Samples = s.History;
-        ChartMax = Math.Max(50, s.History.Select(p => p.DownMbps).DefaultIfEmpty(50).Max() * 1.2);
+        if (HistoryRange == 0)
+        {
+            ChartSamples = s.History;
+            ChartMax = Math.Max(50, s.History.Select(p => p.DownMbps).DefaultIfEmpty(50).Max() * 1.2);
+        }
 
         LastUpdatedText = Text.Get("misc.updated") + " " + s.Timestamp.LocalDateTime.ToString("HH:mm:ss");
         LastErrorText = error ?? "";
         ErrorVisibility = string.IsNullOrEmpty(error) ? Visibility.Collapsed : Visibility.Visible;
+
+        TrayUpdate?.Invoke($"StarHealth · {StatusText} · ↓{DownText} ↑{UpText}");
+        EvaluateNotifications(s, fallback);
+    }
+
+    private void EvaluateNotifications(DishSnapshot s, bool fallback)
+    {
+        if (!NotificationsEnabled || s.FromDemo) return;
+        bool reachable = !fallback;
+
+        if (_wasReachable is bool was && was != reachable)
+            ShowToast(Text.Get(reachable ? "toast.online.t" : "toast.offline.t"),
+                Text.Get(reachable ? "toast.online.b" : "toast.offline.b"), force: true);
+        _wasReachable = reachable;
+
+        foreach (var o in s.RecentOutages)
+        {
+            string key = $"{o.Start.Ticks}:{o.Cause}";
+            if (!_seenOutages.Add(key)) continue;
+            if (_seenOutages.Count > 500) _seenOutages.Clear();
+            if (o.Duration.TotalSeconds >= 5)
+                ShowToast(Text.Get("toast.outage.t"),
+                    $"{CauseText(o.Cause)} · {Text.Duration(o.Duration)} · {o.Start.LocalDateTime:HH:mm:ss}");
+        }
+
+        string okUpdate = Text.Get("dish.update.ok");
+        if (!string.IsNullOrEmpty(s.SoftwareUpdate) && s.SoftwareUpdate != okUpdate && !_updateToasted)
+        {
+            _updateToasted = true;
+            ShowToast(Text.Get("toast.update.t"), s.SoftwareUpdate, force: true);
+        }
+        else if (s.SoftwareUpdate == okUpdate) _updateToasted = false;
+
+        if (s.AlignmentNotice is not null && s.AlignmentNotice != _lastNotice)
+        {
+            _lastNotice = s.AlignmentNotice;
+            ShowToast(Text.Get("toast.align.t"), s.AlignmentNotice, force: true);
+        }
+        else if (s.AlignmentNotice is null) _lastNotice = null;
+    }
+
+    private void ShowToast(string title, string body, bool force = false)
+    {
+        if (!force && (DateTime.UtcNow - _lastToast).TotalSeconds < 30) return;
+        _lastToast = DateTime.UtcNow;
+        try
+        {
+            var toast = new Microsoft.Windows.AppNotifications.Builder.AppNotificationBuilder()
+                .AddText(title)
+                .AddText(body)
+                .BuildNotification();
+            Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Show(toast);
+        }
+        catch { /* toasts are best-effort (headless/remote sessions) */ }
     }
 
     private static double? Median(IEnumerable<double> values)

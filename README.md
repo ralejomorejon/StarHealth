@@ -8,11 +8,24 @@ libraries that move unchanged into an Uno Platform head.
 
 ## Install (regular Windows users)
 
-Download **StarHealth-Setup-0.1.0-alpha-win-x64.exe** from
-[Releases](https://github.com/ralejomorejon/StarHealth/releases/tag/v0.1.0-alpha)
+Download **StarHealth-Setup-*-win-x64.exe** from
+[Releases](https://github.com/ralejomorejon/StarHealth/releases)
 and run it — no extra runtimes needed (self-contained, 64-bit Windows).
 Unsigned alpha: Windows SmartScreen will warn on first launch.
 Run it on the same LAN as your dish (`192.168.100.1`).
+
+## Monitor behavior
+
+- **Local history (SQLite, 30 days):** every poll is recorded, so the
+  Estadísticas chart offers 15 min / 24 h / 7 d ranges, availability
+  percentages, and one-click outage reports (clipboard or
+  `Documents\StarHealth`) even across restarts.
+- **Tray + notifications:** close minimizes to the tray (toggleable); toasts
+  fire on connection loss/recovery, long outages (≥ 5 s), pending update
+  reboots and new misalignment warnings. The tray tooltip always shows the
+  live status line.
+
+## Run from source
 
 ## Where each datum comes from (read this)
 

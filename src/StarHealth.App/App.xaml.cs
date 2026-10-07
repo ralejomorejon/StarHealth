@@ -3,6 +3,7 @@ using StarHealth.App.ViewModels;
 using StarHealth.App.Views;
 using StarHealth.Core.Demo;
 using StarHealth.Data.Grpc;
+using System.IO;
 
 namespace StarHealth.App;
 
@@ -22,9 +23,15 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        try { Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register(); }
+        catch { /* toasts are best-effort */ }
+
+        var storePath = Path.Combine(
+            Windows.Storage.ApplicationData.Current.LocalFolder.Path, "history.db");
         var vm = new DashboardViewModel(
             ep => new GrpcDishClient(ep),
-            new DemoDishClient());
+            new DemoDishClient(),
+            new StarHealth.Data.Store.HistoryStore(storePath));
 
         _window = new MainWindow(vm);
         _window.Activate();

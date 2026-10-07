@@ -1,8 +1,11 @@
 ; StarHealth installer for regular Windows users.
 ; Bundles the self-contained unpackaged publish output (dotnet + Windows App
 ; SDK included), so no runtime downloads are needed on the target machine.
-; Build: ISCC.exe installer/StarHealth.iss   (output -> installer/output/)
-#define AppVersion "0.1.0-alpha"
+; Build locally: ISCC.exe installer/StarHealth.iss   (output -> installer/output/)
+; CI passes /DAppVersion=<tag>.
+#ifndef AppVersion
+#define AppVersion "0.0.0-dev"
+#endif
 #define PublishDir "..\src\StarHealth.App\bin\Release\net10.0-windows10.0.26100.0\win-x64\publish"
 
 [Setup]

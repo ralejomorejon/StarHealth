@@ -28,10 +28,18 @@
                             <TextBlock Style="{StaticResource SourceTagText}" Text="{x:Bind Vm.Tr('src.dish'), Mode=OneWay}" />
                         </Border>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ComboBox SelectedIndex="{x:Bind Vm.HistoryRange, Mode=TwoWay}">
+                            <ComboBoxItem Content="{x:Bind Vm.Tr('hist.range.live'), Mode=OneWay}" />
+                            <ComboBoxItem Content="{x:Bind Vm.Tr('hist.range.24h'), Mode=OneWay}" />
+                            <ComboBoxItem Content="{x:Bind Vm.Tr('hist.range.7d'), Mode=OneWay}" />
+                        </ComboBox>
+                        <Button Command="{x:Bind Vm.RefreshHistoryCommand}" Content="{x:Bind Vm.Tr('hist.refresh'), Mode=OneWay}" />
+                    </StackPanel>
                     <controls:ThroughputChart
                         Height="220"
                         Max="{x:Bind Vm.ChartMax, Mode=OneWay}"
-                        Samples="{x:Bind Vm.Samples, Mode=OneWay}" />
+                        Samples="{x:Bind Vm.ChartSamples, Mode=OneWay}" />
                     <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('perf.note'), Mode=OneWay}" />
                 </StackPanel>
             </Border>
@@ -43,6 +51,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -218,6 +227,50 @@
                     </StackPanel>
                 </Border>
 
+                <Border
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('sla.title'), Mode=OneWay}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('sla.24h'), Mode=OneWay}" />
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.Sla24Text, Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('sla.7d'), Mode=OneWay}" />
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="{x:Bind Vm.Sla7Text, Mode=OneWay}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('perf.note'), Mode=OneWay}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Grid.Row="3"
+                    Grid.Column="2"
+                    Style="{StaticResource DishCardStyle}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('rpt.title'), Mode=OneWay}" />
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            Command="{x:Bind Vm.CopyReportCommand}"
+                            Content="{x:Bind Vm.Tr('rpt.copy'), Mode=OneWay}" />
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            Command="{x:Bind Vm.SaveReportCommand}"
+                            Content="{x:Bind Vm.Tr('rpt.save'), Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.ReportStatusText, Mode=OneWay}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
             </Grid>
 
         </StackPanel>

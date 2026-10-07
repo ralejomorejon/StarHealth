@@ -43,6 +43,20 @@
 
             <Border Style="{StaticResource DishCardStyle}">
                 <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('mon.title'), Mode=OneWay}" />
+                    <ToggleSwitch
+                        Header="{x:Bind Vm.Tr('mon.notify'), Mode=OneWay}"
+                        IsOn="{x:Bind Vm.NotificationsEnabled, Mode=TwoWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('mon.notify.sub'), Mode=OneWay}" TextWrapping="Wrap" />
+                    <ToggleSwitch
+                        Header="{x:Bind Vm.Tr('mon.tray'), Mode=OneWay}"
+                        IsOn="{x:Bind Vm.TrayEnabled, Mode=TwoWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('mon.tray.sub'), Mode=OneWay}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
                     <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('dishes.title'), Mode=OneWay}" />
                     <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('dishes.note'), Mode=OneWay}" TextWrapping="Wrap" />
                     <ComboBox

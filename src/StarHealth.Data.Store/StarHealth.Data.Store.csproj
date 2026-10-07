@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- UI-free like Core: same code runs on WinUI today and Uno tomorrow. -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.20" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StarHealth.Core\StarHealth.Core.csproj" />
+  </ItemGroup>
+</Project>

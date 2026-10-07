@@ -155,9 +155,38 @@ public static class Text
         ["about.stack.body"] = ("WinUI 3 nativo sobre .NET, MVVM con CommunityToolkit, sin librerías de gráficas (Canvas + Polyline propios). Núcleo y acceso a datos sin dependencias de UI, listos para Uno Platform (Android/iOS/macOS/Linux/Web) sin cambios.", "Native WinUI 3 on .NET, MVVM with CommunityToolkit, no chart libraries (hand-rolled Canvas + Polyline). UI-free core and data layers, ready for Uno Platform (Android/iOS/macOS/Linux/Web) unchanged."),
         ["about.note"] = ("AVISO", "NOTE"),
         ["about.note.body"] = ("Proyecto no oficial, sin afiliación con SpaceX/Starlink. Los datos de cuenta (plan, facturación, soporte) solo existen en la app oficial con sesión iniciada y no se replican aquí por diseño.", "Unofficial project, not affiliated with SpaceX/Starlink. Account data (plan, billing, support) only exists in the signed-in official app and is not replicated here by design."),
+        // Monitor: notifications + tray
+        ["mon.title"] = ("MONITOR", "MONITOR"),
+        ["mon.notify"] = ("Notificaciones", "Notifications"),
+        ["mon.notify.sub"] = ("Avisos de conexión, cortes largos, actualizaciones y desalineación.", "Alerts for connection, long outages, updates and misalignment."),
+        ["mon.tray"] = ("Bandeja del sistema", "System tray"),
+        ["mon.tray.sub"] = ("Minimiza a la bandeja al cerrar; el icono muestra el estado.", "Minimize to tray on close; the icon shows status."),
+        ["tray.show"] = ("Mostrar", "Show"),
+        ["tray.quit"] = ("Salir", "Quit"),
+        ["toast.offline.t"] = ("Sin conexión con la antena", "Dish unreachable"),
+        ["toast.offline.b"] = ("Mostrando datos de demostración.", "Showing demo data."),
+        ["toast.online.t"] = ("Antena conectada", "Dish connected"),
+        ["toast.online.b"] = ("De vuelta en vivo.", "Back live."),
+        ["toast.outage.t"] = ("Interrupción", "Outage"),
+        ["toast.update.t"] = ("Actualización de la antena", "Dish update"),
+        ["toast.align.t"] = ("Alineación", "Alignment"),
+        ["hist.range.live"] = ("15 min", "15 min"),
+        ["hist.range.24h"] = ("24 h", "24 h"),
+        ["hist.range.7d"] = ("7 días", "7 days"),
+        ["hist.refresh"] = ("Actualizar", "Refresh"),
+        ["sla.title"] = ("DISPONIBILIDAD", "AVAILABILITY"),
+        ["sla.24h"] = ("24 h", "24 h"),
+        ["sla.7d"] = ("7 días", "7 days"),
+        ["rpt.copy"] = ("Copiar informe", "Copy report"),
+        ["rpt.save"] = ("Guardar informe", "Save report"),
+        ["rpt.copied"] = ("Informe copiado al portapapeles", "Report copied to clipboard"),
+        ["rpt.saved"] = ("Informe guardado en ", "Report saved to "),
+        ["rpt.title"] = ("StarHealth · informe de interrupciones", "StarHealth · outage report"),
+        ["rpt.avail"] = ("Disponibilidad: {0} ({1} muestras)", "Availability: {0} ({1} samples)"),
+        ["rpt.energy"] = ("Energía media {0} W · máx. {1} W", "Average power {0} W · max {1} W"),
+        ["rpt.outages"] = ("Cortes: {0} · total {1} s · más largo {2} s", "Outages: {0} · total {1} s · longest {2} s"),
         // Dish fleet (multi-endpoint switcher)
-        ["dishes.title"] = ("ANTENAS", "DISHES"),
-        ["dishes.note"] = ("Cada antena vive en su propio segmento con su IP. Añade una entrada por cada antena alcanzable desde esta red.", "Each dish lives on its own segment with its own IP. Add one entry per dish reachable from this network."),
+        ["dishes.title"] = ("ANTENAS", "DISHES"),        ["dishes.note"] = ("Cada antena vive en su propio segmento con su IP. Añade una entrada por cada antena alcanzable desde esta red.", "Each dish lives on its own segment with its own IP. Add one entry per dish reachable from this network."),
         ["dishes.name"] = ("Nombre", "Name"),
         ["dishes.host"] = ("Anfitrión o IP", "Host or IP"),
         ["dishes.port"] = ("Puerto", "Port"),
@@ -306,8 +335,44 @@ public static class Text
         Changed?.Invoke();
     }
 
-    public static string Duration(TimeSpan d)
-        => d.TotalHours >= 1 ? Get("dur.h", (int)d.TotalHours, d.Minutes)
+    public static string State(Models.DishState s) => Get("state." + s switch
+    {
+        Models.DishState.Connected => "connected",
+        Models.DishState.Searching => "searching",
+        Models.DishState.Booting => "booting",
+        Models.DishState.Stowed => "stowed",
+        Models.DishState.Sleeping => "sleeping",
+        Models.DishState.Obstructed => "obstructed",
+        Models.DishState.NoSatellites => "nosats",
+        Models.DishState.NoSignal => "nosignal",
+        Models.DishState.ThermalShutdown => "thermal",
+        Models.DishState.Offline => "offline",
+        _ => "unknown",
+    });
+
+    public static string Cause(Models.OutageCause c) => Get("cause." + c switch
+    {
+        Models.OutageCause.Obstructed => "obstructed",
+        Models.OutageCause.NoSatellites => "nosats",
+        Models.OutageCause.ThermalShutdown => "thermal",
+        Models.OutageCause.ThermalThrottle => "throttle",
+        Models.OutageCause.SoftwareUpdate => "update",
+        Models.OutageCause.NetworkIssue => "network",
+        Models.OutageCause.PowerDip => "power",
+        Models.OutageCause.Booting => "booting",
+        Models.OutageCause.Stowed => "stowed",
+        Models.OutageCause.Sleeping => "sleeping",
+        Models.OutageCause.SkySearch => "skysearch",
+        Models.OutageCause.ActuatorActivity => "actuator",
+        Models.OutageCause.CableTest => "cable",
+        Models.OutageCause.Inhibited => "inhibited",
+        _ => "unknown",
+    });
+
+    public static string CauseName(string name)
+        => Enum.TryParse<Models.OutageCause>(name, out var c) ? Cause(c) : name;
+
+    public static string Duration(TimeSpan d)        => d.TotalHours >= 1 ? Get("dur.h", (int)d.TotalHours, d.Minutes)
             : d.TotalMinutes >= 1 ? Get("dur.m", d.Minutes, d.Seconds)
             : Get("dur.s", d.Seconds);
 

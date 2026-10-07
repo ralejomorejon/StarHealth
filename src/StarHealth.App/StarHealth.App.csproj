@@ -50,6 +50,7 @@
   -->
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="H.NotifyIcon" Version="2.4.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="0.7.1" />
@@ -58,6 +59,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StarHealth.Core\StarHealth.Core.csproj" />
     <ProjectReference Include="..\StarHealth.Data.Grpc\StarHealth.Data.Grpc.csproj" />
+    <ProjectReference Include="..\StarHealth.Data.Store\StarHealth.Data.Store.csproj" />
   </ItemGroup>
 
   <!--
