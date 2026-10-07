@@ -32,6 +32,7 @@ public sealed partial class MainWindow : Window
         {
             try { if (_tray?.IsCreated == true) _tray.UpdateToolTip(tip); } catch { }
         };
+        _vm.RequestQuit = () => DispatcherQueue.TryEnqueue(Quit);
         _vm.TraySettingsChanged += ApplyTrayVisibility;
         ApplyTrayVisibility();
         AppWindow.Closing += OnClosing;

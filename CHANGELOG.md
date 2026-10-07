@@ -5,6 +5,21 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.1.7-alpha] - 2026-10-07
+
+### Added
+- **In-app updater (About page).** Shows the installed version, checks the
+  GitHub Releases feed, and on newer tags downloads the installer with
+  progress, verifies its SHA256 sidecar (fail-closed when missing or
+  mismatched), then quits the app and launches the installer so files can
+  replace. CI now stamps `-p:InformationalVersion` with the tag and attaches
+  a `.sha256` file next to every installer.
+- `AppVersion`/`UpdateFeed` helpers (version parse/compare, newest-with-asset
+  picking) are UI-free and covered by a headless harness (15/15 asserts).
+
+### Fixed
+- Verified the About page headlessly (40 s live run, previously unproven).
+
 ## [v0.1.6-alpha] - 2026-10-07
 
 ### Fixed

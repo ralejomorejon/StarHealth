@@ -33,6 +33,23 @@
 
             <Border Style="{StaticResource DishCardStyle}">
                 <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('upd.title'), Mode=OneWay}" />
+                    <TextBlock Foreground="White" Text="{x:Bind Vm.AppVersionText, Mode=OneWay}" />
+                    <Button Command="{x:Bind Vm.CheckForUpdatesCommand}" Content="{x:Bind Vm.Tr('upd.check'), Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.UpdateStatusText, Mode=OneWay}" TextWrapping="Wrap" />
+                    <ProgressBar
+                        Maximum="100"
+                        Value="{x:Bind Vm.UpdateProgress, Mode=OneWay}"
+                        Visibility="{x:Bind Vm.UpdateProgressVisibility, Mode=OneWay}" />
+                    <Button
+                        Command="{x:Bind Vm.DownloadAndInstallCommand}"
+                        Content="{x:Bind Vm.Tr('upd.install'), Mode=OneWay}"
+                        Visibility="{x:Bind Vm.UpdateAvailableVisibility, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource DishCardStyle}">
+                <StackPanel Spacing="8">
                     <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('about.how'), Mode=OneWay}" />
                     <TextBlock Foreground="White" Text="{x:Bind Vm.Tr('about.how.body'), Mode=OneWay}" TextWrapping="Wrap" />
                 </StackPanel>

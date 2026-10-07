@@ -11,6 +11,7 @@ using StarHealth.Core.Localization;
 using StarHealth.Core.Models;
 using StarHealth.Core.Services;
 using StarHealth.Data.Grpc;
+using System.Text.Json;
 
 namespace StarHealth.App.ViewModels;
 
@@ -45,6 +46,9 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     public Action<string>? Navigate { get; set; }
     public Action<string>? TrayUpdate { get; set; }
     public event Action? TraySettingsChanged;
+    /// <summary>Wired by MainWindow: the updater asks the shell to quit so the
+    /// installer can replace the files.</summary>
+    public Action? RequestQuit { get; set; }
 
     private bool? _wasReachable;
     private readonly HashSet<string> _seenOutages = new();
@@ -148,6 +152,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string speedResultText = Text.Get("spd.none");
     [ObservableProperty] private string speedButtonText = Text.Get("spd.start");
     [ObservableProperty] private bool testing;
+    [ObservableProperty] private string appVersionText = "";
+    [ObservableProperty] private string updateStatusText = "";
+    [ObservableProperty] private double updateProgress;
+    [ObservableProperty] private Visibility updateProgressVisibility = Visibility.Collapsed;
+    [ObservableProperty] private Visibility updateAvailableVisibility = Visibility.Collapsed;
+    [ObservableProperty] private bool updateBusy;
 #pragma warning restore MVVMTK0045
 
     public ObservableCollection<string> DishNames { get; } = new();
@@ -204,6 +214,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     {
         if (PlanName is "Residencial" or "Residential") PlanName = Text.Get("misc.plan");
         else HeaderTitle = PlanName;
+        AppVersionText = Text.Get("upd.current", AppVersion.Current);
         SpeedButtonText = Testing ? Text.Get("spd.running") : Text.Get("spd.start");
         if (!_hasSpeedResult) SpeedResultText = Text.Get("spd.none");
     }
@@ -497,6 +508,151 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
             return LocalData.GetString("planName") ?? Text.Get("misc.plan");
         }
         catch { return Text.Get("misc.plan"); }
+    }
+
+    // ---- in-app updater (About page) --------------------------------------
+
+    private string _updateTag = "";
+    private string? _updateExeUrl;
+    private string? _updateHashUrl;
+
+    [RelayCommand]
+    private async Task CheckForUpdatesAsync()
+    {
+        if (UpdateBusy) return;
+        UpdateBusy = true;
+        UpdateAvailableVisibility = Visibility.Collapsed;
+        UpdateStatusText = Text.Get("upd.checking");
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("StarHealth-Updater");
+            string json = await http.GetStringAsync(UpdateFeed.ReleasesUrl).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            var pick = UpdateFeed.PickInstaller(doc.RootElement);
+            if (pick is null)
+            {
+                _dq.TryEnqueue(() => UpdateStatusText = Text.Get("upd.error"));
+                return;
+            }
+            _updateTag = pick.Value.Tag;
+            _updateExeUrl = pick.Value.ExeUrl;
+            _updateHashUrl = pick.Value.HashUrl;
+            _dq.TryEnqueue(() =>
+            {
+                if (AppVersion.IsNewer(_updateTag, AppVersion.Current))
+                {
+                    UpdateStatusText = Text.Get("upd.available", _updateTag);
+                    UpdateAvailableVisibility = Visibility.Visible;
+                }
+                else UpdateStatusText = Text.Get("upd.uptodate");
+            });
+        }
+        catch
+        {
+            _dq.TryEnqueue(() => UpdateStatusText = Text.Get("upd.error"));
+        }
+        finally
+        {
+            _dq.TryEnqueue(() => UpdateBusy = false);
+        }
+    }
+
+    [RelayCommand]
+    private async Task DownloadAndInstallAsync()
+    {
+        if (UpdateBusy || string.IsNullOrEmpty(_updateExeUrl)) return;
+        UpdateBusy = true;
+        UpdateAvailableVisibility = Visibility.Collapsed;
+        UpdateProgress = 0;
+        UpdateProgressVisibility = Visibility.Visible;
+        try
+        {
+            string fileName = FileNameFromUrl(_updateExeUrl, _updateTag);
+            string dest = Path.Combine(Path.GetTempPath(), fileName);
+            using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) })
+            {
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("StarHealth-Updater");
+                using var resp = await http.GetAsync(_updateExeUrl,
+                    HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                resp.EnsureSuccessStatusCode();
+                long? total = resp.Content.Headers.ContentLength;
+                await using var net = await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                await using var fs = File.Create(dest);
+                var buf = new byte[81920];
+                long read = 0;
+                int n;
+                while ((n = await net.ReadAsync(buf).ConfigureAwait(false)) > 0)
+                {
+                    await fs.WriteAsync(buf.AsMemory(0, n)).ConfigureAwait(false);
+                    read += n;
+                    if (total > 0)
+                    {
+                        double pct = (double)read / total.Value * 100;
+                        _dq.TryEnqueue(() =>
+                        {
+                            UpdateStatusText = Text.Get("upd.downloading", _updateTag, pct);
+                            UpdateProgress = pct;
+                        });
+                    }
+                }
+            }
+            var info = new FileInfo(dest);
+            if (!info.Exists || info.Length == 0) throw new IOException("empty download");
+            _dq.TryEnqueue(() => UpdateStatusText = Text.Get("upd.verify"));
+            if (string.IsNullOrEmpty(_updateHashUrl)) throw new IOException("no signature published");
+            string expected = await DownloadHashAsync(_updateHashUrl).ConfigureAwait(false);
+            await using (var fs = File.OpenRead(dest))
+            {
+                string actual = Convert.ToHexString(
+                    await System.Security.Cryptography.SHA256.HashDataAsync(fs).ConfigureAwait(false));
+                if (!string.Equals(expected.Trim().Split(' ')[0], actual,
+                    StringComparison.OrdinalIgnoreCase))
+                    throw new IOException("hash mismatch");
+            }
+            _dq.TryEnqueue(() => UpdateStatusText = Text.Get("upd.installing", _updateTag));
+            await Task.Delay(500).ConfigureAwait(false);
+            // Quit first so the installer can replace the files, then launch
+            // it and terminate: the wizard takes seconds to reach file copy.
+            _dq.TryEnqueue(() => RequestQuit?.Invoke());
+            await Task.Delay(1500).ConfigureAwait(false);
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dest)
+                {
+                    UseShellExecute = true,
+                });
+            }
+            catch { }
+            Environment.Exit(0);
+        }
+        catch
+        {
+            _dq.TryEnqueue(() =>
+            {
+                UpdateStatusText = Text.Get("upd.dlerror");
+                UpdateProgressVisibility = Visibility.Collapsed;
+                UpdateBusy = false;
+            });
+        }
+    }
+
+    private static string FileNameFromUrl(string url, string tag)
+    {
+        try
+        {
+            string last = new Uri(url).Segments.Last().Trim('/');
+            if (last.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return last;
+        }
+        catch { }
+        return $"StarHealth-{tag}-win-x64.exe";
+    }
+
+    private static async Task<string> DownloadHashAsync(string url)
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("StarHealth-Updater");
+        return await http.GetStringAsync(url).ConfigureAwait(false);
     }
 
     private async Task LoopAsync(CancellationToken ct)

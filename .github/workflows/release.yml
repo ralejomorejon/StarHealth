@@ -22,7 +22,9 @@ jobs:
         run: >
           dotnet publish src/StarHealth.App/StarHealth.App.csproj
           -c Release -r win-x64 --self-contained
-          -p:WindowsAppSDKSelfContained=true --nologo -v q
+          -p:WindowsAppSDKSelfContained=true
+          -p:InformationalVersion="${{ github.ref_name }}"
+          --nologo -v q
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
@@ -34,10 +36,16 @@ jobs:
           /DAppVersion="${{ github.ref_name }}"
           installer/StarHealth.iss
 
+      - name: Hash installer
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem installer/output/*.exe | Select-Object -First 1
+          ((Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower() + '  ' + $exe.Name) | Out-File "$($exe.FullName).sha256" -Encoding ascii -NoNewline
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: installer/output/*.exe
+          files: installer/output/*
           generate_release_notes: false
           name: "${{ github.ref_name }}"
           body: |
