@@ -123,6 +123,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     public bool HasMultipleDishes => _endpoints.Count > 1;
 
     private bool _syncingEditor;
+    private bool _hasSpeedResult;
     private List<TimelineRow> _timelineAll = new();
 
     public string EndpointText => _activeEndpoint.EndpointText;
@@ -150,11 +151,29 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         catch { }
         LoadEndpoints();
         _poller = CreatePoller(_activeEndpoint);
+        ReseedStaticText();
         HeaderTitle = PlanName;
         Text.Changed += OnLangChanged;
     }
 
-    private void OnLangChanged() => OnPropertyChanged(string.Empty);
+    private void OnLangChanged()
+    {
+        ReseedStaticText();
+        OnPropertyChanged(string.Empty);
+    }
+
+    /// <summary>
+    /// Properties that only refresh on their own trigger (plan edits, speed
+    /// tests, map loads) would otherwise stay in the old language until that
+    /// trigger fires. Everything poll-driven refreshes within 2 s on its own.
+    /// </summary>
+    private void ReseedStaticText()
+    {
+        if (PlanName is "Residencial" or "Residential") PlanName = Text.Get("misc.plan");
+        else HeaderTitle = PlanName;
+        SpeedButtonText = Testing ? Text.Get("spd.running") : Text.Get("spd.start");
+        if (!_hasSpeedResult) SpeedResultText = Text.Get("spd.none");
+    }
 
     // ---- dish fleet (multi-dish endpoints + switcher) --------------------
 
@@ -424,6 +443,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
                 $"https://speed.cloudflare.com/__down?bytes={bytes}").ConfigureAwait(false);
             sw.Stop();
             double mbps = data.Length * 8 / 1e6 / Math.Max(0.1, sw.Elapsed.TotalSeconds);
+            _hasSpeedResult = true;
             _dq.TryEnqueue(() => SpeedResultText =
                 $"{mbps:F0} Mbps · 25 MB / {sw.Elapsed.TotalSeconds:F1} s");
         }

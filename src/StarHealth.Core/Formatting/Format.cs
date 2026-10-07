@@ -59,8 +59,8 @@ public static class Format
         var h = hw.ToLowerInvariant();
         if (h.Contains("mini")) return "Mini";
         if (h.Contains("high_performance") || h.Contains("hp")) return "High Performance";
-        if (h.Contains("rev4") || h.Contains("rev3")) return "Estándar (Gen 3)";
-        if (h.Contains("rev2") || h.Contains("rev1")) return "Redonda / Gen 2 (motorizada)";
+        if (h.Contains("rev4") || h.Contains("rev3")) return Localization.Text.Get("hw.standard");
+        if (h.Contains("rev2") || h.Contains("rev1")) return Localization.Text.Get("hw.round");
         return hw;
     }
 

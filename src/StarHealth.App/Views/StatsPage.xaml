@@ -62,18 +62,7 @@
                 <Border
                     Grid.Row="0"
                     Grid.Column="1"
-                    Style="{StaticResource DishCardStyle}">
-                    <StackPanel Spacing="6">
-                        <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('signal.title'), Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource DishBigValue}" Text="{x:Bind Vm.SnrText, Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.DropText, Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('signal.snr.note'), Mode=OneWay}" TextWrapping="Wrap" />
-                    </StackPanel>
-                </Border>
-
-                <Border
-                    Grid.Row="0"
-                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
                     Style="{StaticResource DishCardStyle}">
                     <StackPanel Spacing="6">
                         <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('power.title'), Mode=OneWay}" />

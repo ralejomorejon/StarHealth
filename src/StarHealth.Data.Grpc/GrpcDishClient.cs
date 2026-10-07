@@ -266,9 +266,9 @@ public sealed class GrpcDishClient : IDishClient, IDisposable
             ? AngleBetween(az.Value, el.Value, desAz.Value, desEl.Value) : null;
         string summary = (az, el) switch
         {
-            (not null, not null) => $"Acimut {az:F1}° · Elevación {el:F1}°" +
-                (tilt is not null ? $" · Inclinación {tilt:F1}°" : ""),
-            _ => "La antena no informa orientación",
+            (not null, not null) => Text.Get("align.summary", $"{az:F1}", $"{el:F1}") +
+                (tilt is not null ? Text.Get("align.summary.tilt", $"{tilt:F1}") : ""),
+            _ => Text.Get("align.summary.none"),
         };
 
         string? alignmentNotice = null;
@@ -396,7 +396,7 @@ public sealed class GrpcDishClient : IDishClient, IDisposable
                 "WRITING" => Text.Get("dish.update.write"),
                 "FAULTED" => Text.Get("dish.update.fail"),
                 "DISABLED" => Text.Get("dish.update.disabled"),
-                _ => $"Actualización: {state}",
+                _ => Text.Get("dish.update.other", state),
             });
         if (progress is > 0 and < 1) parts.Add($"{progress:P0}");
         if (rebootReady) parts.Add(Text.Get("dish.update.reboot"));
@@ -422,16 +422,16 @@ public sealed class GrpcDishClient : IDishClient, IDisposable
         return new DishConfigInfo(
             EnumFieldName(dishSchema, dish, "snow_melt_mode") switch
             {
-                "AUTO" => "Automático",
-                "ALWAYS_ON" => "Siempre encendido",
-                "ALWAYS_OFF" => "Apagado",
+                "AUTO" => Text.Get("cfg.snow.auto"),
+                "ALWAYS_ON" => Text.Get("cfg.snow.on"),
+                "ALWAYS_OFF" => Text.Get("cfg.snow.off"),
                 var other => other,
             },
             dish.TryGetBool("power_save_mode") == true,
             EnumFieldName(dishSchema, dish, "location_request_mode") switch
             {
-                "NONE" => "No solicitada",
-                "LOCAL" => "Local",
+                "NONE" => Text.Get("cfg.loc.none"),
+                "LOCAL" => Text.Get("cfg.loc.local"),
                 var other => other,
             });
     }
@@ -680,14 +680,14 @@ public sealed class GrpcDishClient : IDishClient, IDisposable
         if (t.StartsWith("EVENT_REASON_")) t = t["EVENT_REASON_".Length..];
         return t switch
         {
-            "WARNING" => "Aviso",
-            "INFO" => "Info",
-            "ERROR" => "Error",
-            "CRITICAL" => "Crítico",
-            "OUTAGE_NO_PINGS" => "corte: sin pings",
-            "OUTAGE_NO_DOWNLINK" => "corte: sin bajada",
-            "OUTAGE_OBSTRUCTED" => "corte: obstrucción",
-            "OUTAGE_NO_SATS" => "corte: sin satélites",
+            "WARNING" => Text.Get("ev.warning"),
+            "INFO" => Text.Get("ev.info"),
+            "ERROR" => Text.Get("ev.error"),
+            "CRITICAL" => Text.Get("ev.critical"),
+            "OUTAGE_NO_PINGS" => Text.Get("ev.out.pings"),
+            "OUTAGE_NO_DOWNLINK" => Text.Get("ev.out.downlink"),
+            "OUTAGE_OBSTRUCTED" => Text.Get("ev.out.obstructed"),
+            "OUTAGE_NO_SATS" => Text.Get("ev.out.nosats"),
             _ => t.Replace('_', ' ').ToLowerInvariant(),
         };
     }
