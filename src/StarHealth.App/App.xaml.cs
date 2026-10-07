@@ -2,20 +2,18 @@
 using StarHealth.App.ViewModels;
 using StarHealth.App.Views;
 using StarHealth.Core.Demo;
-using StarHealth.Core.Services;
 using StarHealth.Data.Grpc;
 
 namespace StarHealth.App;
 
 /// <summary>
-/// Composition root. The live gRPC client is always tried first; the demo
-/// client keeps every screen functional when the dish is unreachable.
-/// ViewModels + Core move unchanged into an Uno head for other OSes.
+/// Composition root. One live gRPC client per dish endpoint, always tried
+/// first; the shared demo client keeps every screen functional when a dish
+/// is unreachable. ViewModels + Core move unchanged into an Uno head.
 /// </summary>
 public partial class App : Application
 {
     private Window? _window;
-    private DishPollingService? _poller;
 
     public App()
     {
@@ -24,9 +22,9 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var primary = new GrpcDishClient(new DishEndpointOptions());
-        _poller = new DishPollingService(primary, new DemoDishClient());
-        var vm = new DashboardViewModel(_poller);
+        var vm = new DashboardViewModel(
+            ep => new GrpcDishClient(ep),
+            new DemoDishClient());
 
         _window = new MainWindow(vm);
         _window.Activate();

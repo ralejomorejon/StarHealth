@@ -6,9 +6,11 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using StarHealth.Core.Abstractions;
 using StarHealth.Core.Localization;
 using StarHealth.Core.Models;
 using StarHealth.Core.Services;
+using StarHealth.Data.Grpc;
 
 namespace StarHealth.App.ViewModels;
 
@@ -25,10 +27,15 @@ public sealed record TimelineRow(DateTimeOffset Timestamp, string TimeText, doub
 /// </summary>
 public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 {
-    private readonly DishPollingService _poller;
+    private readonly Func<DishEndpointOptions, IDishClient> _clientFactory;
+    private readonly IDishClient _fallbackClient;
+    private DishPollingService _poller;
+    private IDisposable? _primaryClient;
     private readonly DispatcherQueue _dq = DispatcherQueue.GetForCurrentThread();
     private CancellationTokenSource? _cts;
     private Task? _loop;
+    private List<DishEndpointOptions> _endpoints = new();
+    private DishEndpointOptions _activeEndpoint = new();
 
     /// <summary>Set by the shell: tag of the page to open from the alignment CTA.</summary>
     public Action<string>? Navigate { get; set; }
@@ -111,27 +118,211 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AlertRow> Alerts { get; } = new();
     public ObservableCollection<TimelineRow> Timeline { get; } = new();
+    public ObservableCollection<string> DishNames { get; } = new();
 
+    public bool HasMultipleDishes => _endpoints.Count > 1;
+
+    private bool _syncingEditor;
     private List<TimelineRow> _timelineAll = new();
 
-    public string EndpointText { get; } = "antena · 192.168.100.1:9200";
+    public string EndpointText => _activeEndpoint.EndpointText;
+
+#pragma warning disable MVVMTK0045
+    [ObservableProperty] private string editName = "";
+    [ObservableProperty] private string editHost = "";
+    [ObservableProperty] private string editPort = "";
+    [ObservableProperty] private string editorErrorText = "";
+    [ObservableProperty] private Visibility editorErrorVisibility = Visibility.Collapsed;
+    [ObservableProperty] private string selectedDishName = "";
+#pragma warning restore MVVMTK0045
 
     public bool CanTest => !Testing;
 
-    public DashboardViewModel(DishPollingService poller)
+    public DashboardViewModel(Func<DishEndpointOptions, IDishClient> clientFactory, IDishClient fallback)
     {
-        _poller = poller;
+        _clientFactory = clientFactory;
+        _fallbackClient = fallback;
         try
         {
             var l = Windows.Storage.ApplicationData.Current.LocalSettings.Values["lang"] as string;
             if (l == "en" || l == "es") Text.Set(l);
         }
         catch { }
+        LoadEndpoints();
+        _poller = CreatePoller(_activeEndpoint);
         HeaderTitle = PlanName;
         Text.Changed += OnLangChanged;
     }
 
     private void OnLangChanged() => OnPropertyChanged(string.Empty);
+
+    // ---- dish fleet (multi-dish endpoints + switcher) --------------------
+
+    private void LoadEndpoints()
+    {
+        _endpoints = new List<DishEndpointOptions> { new("192.168.100.1", 9200, Text.Get("dish.default.name")) };
+        string activeName = "";
+        try
+        {
+            var raw = Windows.Storage.ApplicationData.Current.LocalSettings.Values["dishEndpoints"] as string;
+            var saved = Windows.Storage.ApplicationData.Current.LocalSettings.Values["activeDish"] as string;
+            if (!string.IsNullOrWhiteSpace(raw))
+            {
+                var list = System.Text.Json.JsonSerializer.Deserialize<List<DishEndpointOptions>>(raw);
+                if (list is { Count: > 0 }) _endpoints = list;
+            }
+            activeName = saved ?? "";
+        }
+        catch { }
+        _activeEndpoint = _endpoints.FirstOrDefault(e => e.Name == activeName) ?? _endpoints[0];
+        RefreshDishNames();
+        PopulateEditor(_activeEndpoint);
+    }
+
+    private void SaveEndpoints()
+    {
+        try
+        {
+            var settings = Windows.Storage.ApplicationData.Current.LocalSettings.Values;
+            settings["dishEndpoints"] = System.Text.Json.JsonSerializer.Serialize(_endpoints);
+            settings["activeDish"] = _activeEndpoint.Name;
+        }
+        catch { }
+    }
+
+    private void RefreshDishNames()
+    {
+        DishNames.Clear();
+        foreach (var e in _endpoints) DishNames.Add(e.Name);
+        OnPropertyChanged(nameof(HasMultipleDishes));
+    }
+
+    private void PopulateEditor(DishEndpointOptions ep)
+    {
+        _syncingEditor = true;
+        try
+        {
+            EditName = ep.Name;
+            EditHost = ep.Host;
+            EditPort = ep.DishPort.ToString();
+            SelectedDishName = ep.Name;
+            EditorErrorText = "";
+            EditorErrorVisibility = Visibility.Collapsed;
+        }
+        finally { _syncingEditor = false; }
+    }
+
+    private DishPollingService CreatePoller(DishEndpointOptions ep)
+    {
+        var primary = _clientFactory(ep);
+        _primaryClient = primary as IDisposable;
+        return new DishPollingService(primary, _fallbackClient);
+    }
+
+    private void SwitchTo(DishEndpointOptions ep)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        _loop = null;
+        _primaryClient?.Dispose();
+        _primaryClient = null;
+        _activeEndpoint = ep;
+        _poller = CreatePoller(ep);
+        SaveEndpoints();
+        OnPropertyChanged(nameof(EndpointText));
+        OnPropertyChanged(nameof(HasMultipleDishes));
+        Start();
+    }
+
+    partial void OnSelectedDishNameChanged(string value)
+    {
+        if (_syncingEditor) return;
+        var ep = _endpoints.FirstOrDefault(e => e.Name == value);
+        if (ep is null || ep.Name == _activeEndpoint.Name)
+        {
+            if (ep is not null) PopulateEditor(ep);
+            return;
+        }
+        PopulateEditor(ep);
+        SwitchTo(ep);
+    }
+
+    [RelayCommand]
+    private void AddDish()
+    {
+        if (!ReadEditor(out var ep)) return;
+        if (_endpoints.Any(e => e.Name == ep.Name))
+        {
+            EditorError(Text.Get("dishes.err.name"));
+            return;
+        }
+        _endpoints.Add(ep);
+        RefreshDishNames();
+        PopulateEditor(ep);
+        SwitchTo(ep);
+    }
+
+    [RelayCommand]
+    private void SaveDish()
+    {
+        if (!ReadEditor(out var ep)) return;
+        int idx = _endpoints.FindIndex(e => e.Name == _activeEndpoint.Name);
+        if (idx < 0) return;
+        if (_endpoints.Any(e => e.Name == ep.Name && e.Name != _activeEndpoint.Name))
+        {
+            EditorError(Text.Get("dishes.err.name"));
+            return;
+        }
+        _endpoints[idx] = ep;
+        RefreshDishNames();
+        PopulateEditor(ep);
+        SwitchTo(ep);
+    }
+
+    [RelayCommand]
+    private void RemoveDish()
+    {
+        if (_endpoints.Count <= 1)
+        {
+            EditorError(Text.Get("dishes.err.last"));
+            return;
+        }
+        _endpoints.RemoveAll(e => e.Name == _activeEndpoint.Name);
+        var next = _endpoints[0];
+        RefreshDishNames();
+        PopulateEditor(next);
+        SwitchTo(next);
+    }
+
+    private bool ReadEditor(out DishEndpointOptions ep)
+    {
+        var name = EditName.Trim();
+        var host = EditHost.Trim();
+        if (string.IsNullOrWhiteSpace(name)) name = Text.Get("dish.default.name");
+        if (!DishEndpointValidation.TryParsePort(EditPort, out int port))
+        {
+            EditorError(Text.Get("dishes.err.port"));
+            ep = new DishEndpointOptions();
+            return false;
+        }
+        if (!DishEndpointValidation.Validate(host, port, out _))
+        {
+            EditorError(Text.Get("dishes.err.host"));
+            ep = new DishEndpointOptions();
+            return false;
+        }
+        ep = new DishEndpointOptions(host, port, name);
+        EditorErrorText = "";
+        EditorErrorVisibility = Visibility.Collapsed;
+        return true;
+    }
+
+    private void EditorError(string message)
+    {
+        EditorErrorText = message;
+        EditorErrorVisibility = Visibility.Visible;
+    }
 
     public void Start()
     {
@@ -147,6 +338,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         _cts?.Dispose();
         _cts = null;
         _loop = null;
+        _primaryClient?.Dispose();
+        _primaryClient = null;
     }
 
     partial void OnPlanNameChanged(string value)
@@ -319,6 +512,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         StatusDetail = s.FromDemo
             ? Text.Get("misc.demo")
             : $"{Text.Uptime(s.Uptime)} · {s.Device.DishId}";
+        if (HasMultipleDishes) StatusDetail += $" · {_activeEndpoint.Name}";
         DishReachable = !fallback;
         DishReachableText = fallback ? Text.Get("misc.reach.no") : Text.Get("misc.reach.yes");
 
