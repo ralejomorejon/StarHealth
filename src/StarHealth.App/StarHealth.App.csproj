@@ -76,6 +76,12 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <!-- Trimming MUST stay on: CsWinRT pre-generates ABI vtable entries for the
+         generic instantiations it can see (chart lists etc.) in trimmed builds.
+         Untrimmed builds fall back to runtime vtable synthesis whose lookup
+         references a phantom ComInterfaceEntry (CsWinRT 2.2.0 + net10) and dies
+         with E_POINTER/TypeLoad ~2 s after launch on ANY page. The three
+         custom-type ItemsControls are gone separately (preformatted strings). -->
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>

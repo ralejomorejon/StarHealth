@@ -37,34 +37,11 @@
             <Border Style="{StaticResource DishCardStyle}">
                 <StackPanel Spacing="8">
                     <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('obst.wedges'), Mode=OneWay}" />
-                    <ItemsControl ItemsSource="{x:Bind Vm.WedgeRows, Mode=OneWay}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid ColumnSpacing="12" Padding="0,3">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="90" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Text="{Binding Label}" />
-                                    <ProgressBar
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Maximum="100"
-                                        Value="{Binding BarPct}" />
-                                    <TextBlock
-                                        Grid.Column="2"
-                                        VerticalAlignment="Center"
-                                        Foreground="{StaticResource DishDim}"
-                                        Text="{Binding ValueText}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <TextBlock
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        Foreground="White"
+                        Text="{x:Bind Vm.WedgeLinesText, Mode=OneWay}" />
                     <Border
                         Padding="12"
                         Background="#22262C"

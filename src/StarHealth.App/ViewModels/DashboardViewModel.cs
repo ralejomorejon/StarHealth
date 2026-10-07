@@ -14,8 +14,11 @@ using StarHealth.Data.Grpc;
 
 namespace StarHealth.App.ViewModels;
 
-public sealed record AlertRow(string Message, bool IsGood);
-public sealed record WedgeRow(string Label, double BarPct, string ValueText);
+/// <summary>One timeline entry (outage or dish event), pre-formatted for display.
+/// Rendered as plain text lines: binding custom-type collections to
+/// ItemsControl.ItemsSource crashes Release builds (CsWinRT vtable lookup
+/// references a phantom ComInterfaceEntry → E_POINTER), so lists cross the
+/// ABI as preformatted strings only.</summary>
 public sealed record TimelineRow(DateTimeOffset Timestamp, string TimeText, double DurationSec, string DurationText, string Text, bool IsOutage);
 
 /// <summary>
@@ -97,7 +100,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double obstructionPct;
     [ObservableProperty] private string obstructionText = "—";
     [ObservableProperty] private string prolongedText = "";
-    [ObservableProperty] private List<WedgeRow> wedgeRows = new();
+    [ObservableProperty] private string wedgeLinesText = "";
     [ObservableProperty] private Visibility wedgesNoteVisibility = Visibility.Collapsed;
     [ObservableProperty] private string alignmentTitle = "—";
     [ObservableProperty] private string alignmentSub = "";
@@ -129,8 +132,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string lastUpdatedText = "";
     [ObservableProperty] private string lastErrorText = "";
     [ObservableProperty] private Visibility errorVisibility = Visibility.Collapsed;
-    [ObservableProperty] private Visibility alertsVisibility = Visibility.Collapsed;
     [ObservableProperty] private Visibility noAlertsVisibility = Visibility.Visible;
+    [ObservableProperty] private string goodAlertsText = "";
+    [ObservableProperty] private string warnAlertsText = "";
+    [ObservableProperty] private string outageLinesText = "";
+    [ObservableProperty] private string eventLinesText = "";
     [ObservableProperty] private int historyRange;
     [ObservableProperty] private IReadOnlyList<ThroughputSample> chartSamples = new List<ThroughputSample>();
     [ObservableProperty] private IReadOnlyList<ThroughputSample> samples = new List<ThroughputSample>();
@@ -144,8 +150,6 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool testing;
 #pragma warning restore MVVMTK0045
 
-    public ObservableCollection<AlertRow> Alerts { get; } = new();
-    public ObservableCollection<TimelineRow> Timeline { get; } = new();
     public ObservableCollection<string> DishNames { get; } = new();
 
     public bool HasMultipleDishes => _endpoints.Count > 1;
@@ -410,15 +414,15 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         var list = _timelineAll
             .Where(r => ShowBriefEvents || r.IsOutage || r.DurationSec >= 1)
             .ToList();
-        // Steady state must produce zero collection traffic: ListView/ItemsControl
-        // re-realize containers on any change notification, which reads as flicker.
-        var sig = string.Join("|", list.Select(r => $"{r.Timestamp.Ticks}:{r.Text}"));
-        if (sig == _timelineSig) return;
-        _timelineSig = sig;
-        SyncRows(Timeline, list);
+        // Plain strings: custom-type ItemsSources crash the ABI bridge, and
+        // string setters no-op when the value is unchanged (zero churn).
+        OutageLinesText = string.Join("\n", list
+            .Where(r => r.IsOutage)
+            .Select(r => $"{r.TimeText} · {r.DurationText} · {r.Text}"));
+        EventLinesText = string.Join("\n", list
+            .Where(r => !r.IsOutage)
+            .Select(r => $"{r.TimeText} · {r.DurationText} · {r.Text}"));
     }
-
-    private string _timelineSig = "";
 
     [RelayCommand]
     private void Align() => Navigate?.Invoke("Alineacion");
@@ -669,11 +673,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         };
         var wedges = s.Obstruction.WedgeFractions;
         double wmax = wedges.Length == 0 ? 0 : wedges.Max();
-        var nextWedges = wedges.Select((v, i) => new WedgeRow(
-            $"{i * 30}°–{(i + 1) * 30}°",
-            wmax <= 0 ? 0 : v / wmax * 100,
-            $"{v * 100:F1} %")).ToList();
-        if (!WedgeRows.SequenceEqual(nextWedges)) WedgeRows = nextWedges;
+        WedgeLinesText = string.Join("\n", wedges.Select((v, i) =>
+            $"{i * 30}°–{(i + 1) * 30}° {new string('█', (int)Math.Round((wmax <= 0 ? 0 : v / wmax) * 12)),-12} {v * 100:F1} %"));
         WedgesNoteVisibility = wedges.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
 
         AlignmentTitle = s.Alignment.Summary;
@@ -749,12 +750,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
                 : Text.Get("misc.out.none")
             : Text.Get("misc.out.summary", s.RecentOutages.Count, Text.Duration(totalOut));
 
-        SyncRows(
-            Alerts,
-            s.ActiveAlerts.Where(a => a.Active)
-                .Select(a => new AlertRow(a.Message, IsGoodAlert(a.Kind))).ToList());
-        AlertsVisibility = Alerts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        NoAlertsVisibility = Alerts.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
+        var active = s.ActiveAlerts.Where(a => a.Active).ToList();
+        GoodAlertsText = string.Join("\n", active
+            .Where(a => IsGoodAlert(a.Kind)).Select(a => a.Message));
+        WarnAlertsText = string.Join("\n", active
+            .Where(a => !IsGoodAlert(a.Kind)).Select(a => a.Message));
+        NoAlertsVisibility = active.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
 
         EthText = s.EthSpeedMbps is int eth ? $"{eth} Mbps" : Text.Get("net.eth.none");
 
@@ -836,25 +837,4 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         "is_heating" or "is_power_save_idle" or "software_update_reboot" => true,
         _ => false,
     };
-
-    /// <summary>
-    /// Keyed in-place sync: reuses existing row instances so the ListViews
-    /// don't rebuild (no flicker), inserts genuinely new rows at their
-    /// sorted position (newest lands on top), drops the rest.
-    /// </summary>
-    private static void SyncRows<T>(ObservableCollection<T> current, List<T> next)
-        where T : notnull
-    {
-        for (int i = 0; i < next.Count; i++)
-        {
-            if (i < current.Count && EqualityComparer<T>.Default.Equals(current[i], next[i]))
-                continue;
-            int j = -1;
-            for (int k = i + 1; k < current.Count; k++)
-                if (EqualityComparer<T>.Default.Equals(current[k], next[i])) { j = k; break; }
-            if (j >= 0) current.Move(j, i);
-            else current.Insert(i, next[i]);
-        }
-        while (current.Count > next.Count) current.RemoveAt(current.Count - 1);
-    }
 }

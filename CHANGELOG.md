@@ -5,6 +5,31 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.1.4-alpha] - 2026-10-07
+
+### Fixed
+- **Statistics tab crashed the app (E_POINTER).** Root cause, proven via WER
+  fault buckets + a `crash.log` breadcrumb + headless page-by-page launch
+  runs: marshalling any `ObservableCollection` (custom-type AND string) into
+  `ItemsControl.ItemsSource`/`ComboBox.ItemsSource` dies inside CsWinRT's
+  runtime vtable synthesis (`GetAbiToProjectionVftblPtr` NRE / phantom
+  top-level `ComInterfaceEntry` TypeLoad in CsWinRT 2.2.0 + net10). It looked
+  like "clicking Stats crashes" but the first poll landing after navigation
+  was the actual trigger.
+- Alerts, timeline, and obstruction wedges now render as preformatted-string
+  `TextBlock`s (per-group colors kept: green/amber/dim); the dish switcher
+  `ComboBox` is populated imperatively in code-behind. Only
+  strings/primitives cross the ABI now. Deleted `AlertTemplateSelector`,
+  `TimelineTemplateSelector`, `SyncRows`, and the dead `AlertRow`/`WedgeRow`
+  records.
+- Trimming stays ON (required for CsWinRT static vtable coverage — untrimmed
+  builds die ~2 s after launch on every page).
+- Added permanent `crash.log` breadcrumb (`%LOCALAPPDATA%\StarHealth\`) for
+  future field reports.
+- Verified headlessly against Release builds with live polling: Status 90 s,
+  Stats / Obstructions / Settings 40 s each, zero crashes (previously died in
+  2–14 s).
+
 ## [v0.1.3-alpha] - 2026-10-07
 
 ### Fixed

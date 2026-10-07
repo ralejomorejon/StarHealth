@@ -19,6 +19,23 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        UnhandledException += (_, e) => CrashLog(e.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            CrashLog(e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+            CrashLog(e.Exception);
+    }
+
+    /// <summary>Last-resort crash breadcrumb for unpackaged installs (no debugger
+    /// attached out in the field). Never throws.</summary>
+    internal static void CrashLog(Exception? ex)
+    {
+        try
+        {
+            File.AppendAllText(Path.Combine(LocalData.FolderPath(), "crash.log"),
+                $"[{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n---\n");
+        }
+        catch { }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

@@ -60,9 +60,9 @@
                     <TextBlock Style="{StaticResource DishCardTitle}" Text="{x:Bind Vm.Tr('dishes.title'), Mode=OneWay}" />
                     <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.Tr('dishes.note'), Mode=OneWay}" TextWrapping="Wrap" />
                     <ComboBox
+                        x:Name="DishBox"
                         Header="{x:Bind Vm.Tr('dishes.title'), Mode=OneWay}"
-                        ItemsSource="{x:Bind Vm.DishNames, Mode=OneWay}"
-                        SelectedItem="{x:Bind Vm.SelectedDishName, Mode=TwoWay}" />
+                        SelectionChanged="OnDishSelectionChanged" />
                     <TextBox Header="{x:Bind Vm.Tr('dishes.name'), Mode=OneWay}" Text="{x:Bind Vm.EditName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBox Header="{x:Bind Vm.Tr('dishes.host'), Mode=OneWay}" Text="{x:Bind Vm.EditHost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBox Header="{x:Bind Vm.Tr('dishes.port'), Mode=OneWay}" Text="{x:Bind Vm.EditPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" InputScope="Number" />

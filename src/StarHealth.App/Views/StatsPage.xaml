@@ -131,29 +131,14 @@
                             Style="{StaticResource DishSubValue}"
                             Text="{x:Bind Vm.Tr('alerts.none'), Mode=OneWay}"
                             Visibility="{x:Bind Vm.NoAlertsVisibility, Mode=OneWay}" />
-                        <ItemsControl ItemsSource="{x:Bind Vm.Alerts, Mode=OneWay}"
-                            Visibility="{x:Bind Vm.AlertsVisibility, Mode=OneWay}">
-                            <ItemsControl.ItemTemplateSelector>
-                                <controls:AlertTemplateSelector>
-                                    <controls:AlertTemplateSelector.GoodTemplate>
-                                        <DataTemplate>
-                                            <TextBlock
-                                                Foreground="{StaticResource DishGood}"
-                                                Text="{Binding Message}"
-                                                TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </controls:AlertTemplateSelector.GoodTemplate>
-                                    <controls:AlertTemplateSelector.WarnTemplate>
-                                        <DataTemplate>
-                                            <TextBlock
-                                                Foreground="{StaticResource DishWarn}"
-                                                Text="{Binding Message}"
-                                                TextWrapping="Wrap" />
-                                        </DataTemplate>
-                                    </controls:AlertTemplateSelector.WarnTemplate>
-                                </controls:AlertTemplateSelector>
-                            </ItemsControl.ItemTemplateSelector>
-                        </ItemsControl>
+                        <TextBlock
+                            Foreground="{StaticResource DishGood}"
+                            Text="{x:Bind Vm.GoodAlertsText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Foreground="{StaticResource DishWarn}"
+                            Text="{x:Bind Vm.WarnAlertsText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
 
@@ -171,59 +156,14 @@
                         <ToggleSwitch
                             Header="{x:Bind Vm.Tr('events.brief'), Mode=OneWay}"
                             IsOn="{x:Bind Vm.ShowBriefEvents, Mode=TwoWay}" />
-                        <ItemsControl ItemsSource="{x:Bind Vm.Timeline, Mode=OneWay}">
-                            <ItemsControl.ItemTemplateSelector>
-                                <controls:TimelineTemplateSelector>
-                                    <controls:TimelineTemplateSelector.OutageTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnSpacing="12" Padding="0,3">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock
-                                                    Grid.Column="0"
-                                                    Foreground="White"
-                                                    Text="{Binding TimeText}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    Foreground="{StaticResource DishDim}"
-                                                    Text="{Binding DurationText}" />
-                                                <TextBlock
-                                                    Grid.Column="2"
-                                                    Foreground="{StaticResource DishWarn}"
-                                                    Text="{Binding Text}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </controls:TimelineTemplateSelector.OutageTemplate>
-                                    <controls:TimelineTemplateSelector.EventTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnSpacing="12" Padding="0,3">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock
-                                                    Grid.Column="0"
-                                                    Foreground="White"
-                                                    Text="{Binding TimeText}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    Foreground="{StaticResource DishDim}"
-                                                    Text="{Binding DurationText}" />
-                                                <TextBlock
-                                                    Grid.Column="2"
-                                                    Foreground="{StaticResource DishDim}"
-                                                    Text="{Binding Text}"
-                                                    TextWrapping="Wrap" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </controls:TimelineTemplateSelector.EventTemplate>
-                                </controls:TimelineTemplateSelector>
-                            </ItemsControl.ItemTemplateSelector>
-                        </ItemsControl>
+                        <TextBlock
+                            Foreground="{StaticResource DishWarn}"
+                            Text="{x:Bind Vm.OutageLinesText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Foreground="{StaticResource DishDim}"
+                            Text="{x:Bind Vm.EventLinesText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
 
