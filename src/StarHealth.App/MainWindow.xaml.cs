@@ -26,7 +26,7 @@ public sealed partial class MainWindow : Window
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon("Assets/AppIcon.ico");
+        try { AppWindow.SetIcon("Assets/AppIcon.ico"); } catch { /* icon is cosmetic */ }
 
         _vm.TrayUpdate = tip =>
         {

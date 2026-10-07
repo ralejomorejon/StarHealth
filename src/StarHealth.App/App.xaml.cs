@@ -26,8 +26,7 @@ public partial class App : Application
         try { Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register(); }
         catch { /* toasts are best-effort */ }
 
-        var storePath = Path.Combine(
-            Windows.Storage.ApplicationData.Current.LocalFolder.Path, "history.db");
+        var storePath = Path.Combine(LocalData.FolderPath(), "history.db");
         var vm = new DashboardViewModel(
             ep => new GrpcDishClient(ep),
             new DemoDishClient(),

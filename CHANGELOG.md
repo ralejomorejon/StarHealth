@@ -5,6 +5,33 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.1.3-alpha] - 2026-10-07
+
+### Fixed
+- **Installed app crashed silently on launch (0x80073D54).** The Inno installer
+  ships an unpackaged build with no MSIX package identity, where
+  `Windows.Storage.ApplicationData` throws `APPMODEL_ERROR_NO_PACKAGE` — the
+  unprotected `LocalFolder` call in `App.OnLaunched` killed the app before any
+  window appeared (confirmed via WER fault bucket + local launch repro).
+- New `LocalData` helper: `LocalFolder`/`LocalSettings` when packaged, file
+  fallback under `%LOCALAPPDATA%\StarHealth` when not. All dish endpoints,
+  language, plan, and toggle settings plus `history.db` now persist for
+  installed users too. Verified: fixed build launches, holds a window, and
+  writes `history.db` via the fallback path.
+- `AppWindow.SetIcon("Assets/AppIcon.ico")` wrapped in try/catch — publish
+  output ships no `Assets/` folder, so this was the next crash in line.
+- Release notes body now uses `${{ github.ref_name }}` instead of a hardcoded
+  version string.
+
+## [v0.1.2-alpha] - 2026-10-07
+
+### Changed
+- Release notes are plain text (version + SmartScreen first-launch notice)
+  instead of auto-generated commit lists or a markdown link.
+- README documents the SmartScreen bypass (More info → Run anyway) and the
+  `%LOCALAPPDATA%\StarHealth` fallback location is now the actual data dir
+  for unpackaged installs.
+
 ## [v0.1.1-alpha] - 2026-10-07
 
 ### Added

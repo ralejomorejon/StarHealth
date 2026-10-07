@@ -56,30 +56,16 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         TraySettingsChanged?.Invoke();
     }
 
-    private static bool LoadBool(string key, bool def)
-    {
-        try
-        {
-            var v = Windows.Storage.ApplicationData.Current.LocalSettings.Values[key];
-            if (v is bool b) return b;
-        }
-        catch { }
-        return def;
-    }
+    private static bool LoadBool(string key, bool def) => LocalData.GetBool(key, def);
 
-    private static void SaveBool(string key, bool value)
-    {
-        try { Windows.Storage.ApplicationData.Current.LocalSettings.Values[key] = value; }
-        catch { }
-    }
+    private static void SaveBool(string key, bool value) => LocalData.SetBool(key, value);
 
     /// <summary>XAML static-text lookup: Text="{x:Bind Vm.Tr('nav.status')}".</summary>
     public string Tr(string key) => Text.Get(key);
 
     public void ChangeLanguage(string lang)
     {
-        try { Windows.Storage.ApplicationData.Current.LocalSettings.Values["lang"] = lang; }
-        catch { }
+        LocalData.SetString("lang", lang);
         Text.Set(lang);
     }
 
@@ -188,7 +174,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         _store = store;
         try
         {
-            var l = Windows.Storage.ApplicationData.Current.LocalSettings.Values["lang"] as string;
+            var l = LocalData.GetString("lang");
             if (l == "en" || l == "es") Text.Set(l);
         }
         catch { }
@@ -226,8 +212,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         string activeName = "";
         try
         {
-            var raw = Windows.Storage.ApplicationData.Current.LocalSettings.Values["dishEndpoints"] as string;
-            var saved = Windows.Storage.ApplicationData.Current.LocalSettings.Values["activeDish"] as string;
+            var raw = LocalData.GetString("dishEndpoints");
+            var saved = LocalData.GetString("activeDish");
             if (!string.IsNullOrWhiteSpace(raw))
             {
                 var list = System.Text.Json.JsonSerializer.Deserialize<List<DishEndpointOptions>>(raw);
@@ -245,9 +231,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var settings = Windows.Storage.ApplicationData.Current.LocalSettings.Values;
-            settings["dishEndpoints"] = System.Text.Json.JsonSerializer.Serialize(_endpoints);
-            settings["activeDish"] = _activeEndpoint.Name;
+            LocalData.SetString("dishEndpoints", System.Text.Json.JsonSerializer.Serialize(_endpoints));
+            LocalData.SetString("activeDish", _activeEndpoint.Name);
         }
         catch { }
     }
@@ -409,8 +394,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     partial void OnPlanNameChanged(string value)
     {
         HeaderTitle = string.IsNullOrWhiteSpace(value) ? Text.Get("misc.plan") : value.Trim();
-        try { Windows.Storage.ApplicationData.Current.LocalSettings.Values["planName"] = HeaderTitle; }
-        catch { }
+        LocalData.SetString("planName", HeaderTitle);
     }
 
     partial void OnTestingChanged(bool value)
@@ -506,8 +490,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     {
         try
         {
-            return Windows.Storage.ApplicationData.Current.LocalSettings.Values["planName"] as string
-                ?? Text.Get("misc.plan");
+            return LocalData.GetString("planName") ?? Text.Get("misc.plan");
         }
         catch { return Text.Get("misc.plan"); }
     }
