@@ -13,7 +13,11 @@ public sealed partial class SettingsPage : Page
     // ObservableCollection to ComboBox.ItemsSource crashes the ABI bridge
     // (CsWinRT vtable lookup references a phantom ComInterfaceEntry).
     // ComboBoxItems created here are pure WinRT types, which marshal fine.
+    // Resyncs are deferred through the dispatcher: mutating Items inside a
+    // SelectionChanged cascade faults the native control (E_NOTFOUND,
+    // instant close, no managed stack).
     private bool _syncDish;
+    private bool _pageActive;
 
     public SettingsPage() => InitializeComponent();
 
@@ -25,6 +29,7 @@ public sealed partial class SettingsPage : Page
             Vm = vm;
             Vm.DishNames.CollectionChanged += OnDishNamesChanged;
             Vm.PropertyChanged += OnVmPropertyChanged;
+            _pageActive = true;
             SyncDishBox();
             Bindings.Update();
             LangBox.SelectedIndex = Text.Current == "en" ? 1 : 0;
@@ -34,6 +39,7 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        _pageActive = false;
         if (Vm is not null)
         {
             Vm.DishNames.CollectionChanged -= OnDishNamesChanged;
@@ -42,16 +48,21 @@ public sealed partial class SettingsPage : Page
     }
 
     private void OnDishNamesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        => SyncDishBox();
+        => QueueDishSync();
 
     private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(DashboardViewModel.SelectedDishName)) SyncDishBox();
+        if (e.PropertyName == nameof(DashboardViewModel.SelectedDishName)) QueueDishSync();
+    }
+
+    private void QueueDishSync()
+    {
+        try { DispatcherQueue.TryEnqueue(SyncDishBox); } catch { SyncDishBox(); }
     }
 
     private void SyncDishBox()
     {
-        if (Vm is null) return;
+        if (!_pageActive || Vm is null) return;
         _syncDish = true;
         try
         {

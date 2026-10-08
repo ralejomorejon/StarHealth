@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **Second dish switch closed the app instantly.** The dish `ComboBox` was
+  resynced synchronously from inside its own `SelectionChanged` cascade
+  (pick → viewmodel switch → property change → `Items.Clear`/re-add), which
+  faults the native control with `E_NOTFOUND` and no managed stack. Resyncs
+  are now deferred through the dispatcher so the native event always
+  completes first, with a page-active guard against post-navigation runs.
+- **Stale dish indicator.** The header's dish name/IP binding lacked
+  `Mode=OneWay` (defaulting to `OneTime`), so it never refreshed on switch.
+- **Poll UI guard.** Every poll-driven UI update now logs to `crash.log`
+  instead of closing the app on a malformed snapshot.
 - **Rapid dish switching crashed the app.** Overlapping switches raced disposal
   against in-flight polls, so switches are now serialized: a shell-level
   curtain blocks all input with a spinner and "Cambiando usuario de Nauta
