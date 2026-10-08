@@ -5,25 +5,28 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [v0.1.8-alpha] - 2026-10-08
 
 ### Fixed
-- **Switching to a saved dish with a malformed host crashed the app.** Validation
-  accepted any non-empty host, so entries like `my dish`, `1.2.3.4:9200`, or
-  unbracketed IPv6 reached `GrpcChannel.ForAddress` on the UI thread, which
-  throws `UriFormatException` (proven per-shape in a harness). Validation now
-  requires a well-formed `http://host:port/` URI; well-formed-but-unreachable
-  hosts stay valid (lazy connect → demo fallback). `SwitchTo` additionally
-  returns success/failure and rebuilds polling on the previous dish instead of
-  ever throwing, so a bad entry shows an editor error instead of closing.
-- **Switching dishes crashed the app.** `SwitchTo` cancelled AND disposed the
-  old `CancellationTokenSource` while its polling loop was still mid-poll;
-  when that loop then awaited `PeriodicTimer.WaitForNextTickAsync` with the
-  dead token it threw `ObjectDisposedException` (proven 20/20 in a harness —
-  it never throws `OperationCanceledException` there), which `LoopAsync`
-  didn't catch. The faulted fire-and-forget task killed the process on GC,
-  seconds after the switch. The wait now breaks cleanly on both exceptions,
-  and the per-loop timer is disposed with its loop.
+- **Switching dishes closed the app seconds later.** `SwitchTo` cancelled AND
+  disposed the old `CancellationTokenSource` while its polling loop was still
+  mid-poll; when that loop then awaited `PeriodicTimer.WaitForNextTickAsync`
+  with the dead token it threw `ObjectDisposedException` (proven 20/20 in a
+  harness — it never throws `OperationCanceledException` there), which
+  `LoopAsync` didn't catch. The faulted fire-and-forget task killed the
+  process on GC. It looked endpoint-specific (WAN 1 vs WAN 4) but any switch
+  did it — `SaveEndpoints` runs before the delayed death, which is why the
+  dish appeared selected on reopen. The wait now breaks cleanly on both
+  exceptions, and the per-loop timer is disposed with its loop. Unreachable
+  subnets (e.g. `10.200.x`) just take a while to fall back to demo data.
+- **Hardened dish host validation.** Validation accepted any non-empty host,
+  so entries like `my dish`, `1.2.3.4:9200`, or unbracketed IPv6 would reach
+  `GrpcChannel.ForAddress` on the UI thread, which throws `UriFormatException`
+  (proven per-shape in a harness). Validation now requires a well-formed
+  `http://host:port/` URI; well-formed-but-unreachable hosts stay valid
+  (lazy connect → demo fallback). `SwitchTo` additionally returns
+  success/failure and rebuilds polling on the previous dish instead of ever
+  throwing, so a bad entry shows an editor error instead of closing.
 - **Dish hero motion (OrbitControls parity).** The loop ran at ~30 fps off
   vsync and physics was per-tick, so movement stuttered; release velocity
   came from raw per-event pixels, so flings varied with mouse poll rate and
