@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **Switching dishes crashed the app.** `SwitchTo` cancelled AND disposed the
+  old `CancellationTokenSource` while its polling loop was still mid-poll;
+  when that loop then awaited `PeriodicTimer.WaitForNextTickAsync` with the
+  dead token it threw `ObjectDisposedException` (proven 20/20 in a harness —
+  it never throws `OperationCanceledException` there), which `LoopAsync`
+  didn't catch. The faulted fire-and-forget task killed the process on GC,
+  seconds after the switch. The wait now breaks cleanly on both exceptions,
+  and the per-loop timer is disposed with its loop.
 - **Dish hero motion (OrbitControls parity).** The loop ran at ~30 fps off
   vsync and physics was per-tick, so movement stuttered; release velocity
   came from raw per-event pixels, so flings varied with mouse poll rate and

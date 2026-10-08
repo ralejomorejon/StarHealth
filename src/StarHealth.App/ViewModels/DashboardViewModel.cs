@@ -657,12 +657,22 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     private async Task LoopAsync(CancellationToken ct)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
         await PollAsync(ct).ConfigureAwait(false);
-        while (!ct.IsCancellationRequested)
+        while (true)
         {
-            try { await timer.WaitForNextTickAsync(ct).ConfigureAwait(false); }
-            catch (OperationCanceledException) { break; }
+            try
+            {
+                if (!await timer.WaitForNextTickAsync(ct).ConfigureAwait(false)) break;
+            }
+            // SwitchTo cancels AND disposes the old CTS while its loop is still
+            // polling; awaiting the timer with the dead token then throws
+            // ObjectDisposedException (proven 20/20 in a harness). Uncaught, the
+            // faulted fire-and-forget task kills the process on GC.
+            catch (Exception ex) when (ex is OperationCanceledException || ex is ObjectDisposedException)
+            {
+                break;
+            }
             await PollAsync(ct).ConfigureAwait(false);
         }
     }
