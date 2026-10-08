@@ -5,6 +5,17 @@ All notable changes to StarHealth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Rapid dish switching crashed the app.** Overlapping switches raced disposal
+  against in-flight polls, so switches are now serialized: a shell-level
+  curtain blocks all input with a spinner and "Cambiando usuario de Nauta
+  Hogar 😉" / "Switching Nauta Hogar user 😉" until the new dish's first poll
+  lands (12 s timeout backstop for unreachable dishes), and any switch
+  attempted mid-switch is refused — the dish combo snaps back instead of
+  queuing a second transition.
+
 ## [v0.1.8-alpha] - 2026-10-08
 
 ### Fixed

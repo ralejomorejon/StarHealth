@@ -86,5 +86,29 @@
                 Navigated="OnFrameNavigated"
                 SizeChanged="OnFrameSizeChanged" />
         </NavigationView>
+
+        <!-- Dish-switch curtain: blocks all input until the first poll of the
+             new dish lands (or a timeout releases it). Primitives only. -->
+        <Border
+            Grid.RowSpan="2"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="#CC0B0D10"
+            Visibility="{x:Bind Vm.SwitchingVisibility, Mode=OneWay}">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="12">
+                <ProgressRing
+                    Width="44"
+                    Height="44"
+                    HorizontalAlignment="Center"
+                    IsActive="True" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Foreground="White"
+                    Text="{x:Bind Vm.Tr('dishes.switching'), Mode=OneWay}" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

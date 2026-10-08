@@ -210,6 +210,7 @@ public static class Text
         ["dishes.err.port"] = ("Puerto 1–65535.", "Port 1–65535."),
         ["dishes.err.name"] = ("Ese nombre ya existe.", "That name is taken."),
         ["dishes.err.last"] = ("Debe quedar al menos una antena.", "At least one dish must remain."),
+        ["dishes.switching"] = ("Cambiando usuario de Nauta Hogar 😉", "Switching Nauta Hogar user 😉"),
         ["dish.default.name"] = ("Antena", "Dish"),
         ["obst.prolonged"] = ("Obstrucción prolongada media:", "Average prolonged obstruction:"),
         ["obst.every"] = ("cada", "every"),

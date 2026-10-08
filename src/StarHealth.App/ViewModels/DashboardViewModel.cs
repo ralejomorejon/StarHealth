@@ -158,6 +158,16 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private Visibility updateProgressVisibility = Visibility.Collapsed;
     [ObservableProperty] private Visibility updateAvailableVisibility = Visibility.Collapsed;
     [ObservableProperty] private bool updateBusy;
+
+    /// <summary>True while a dish switch is settling: shell overlay blocks
+    /// input and further switches are refused until the first poll lands.</summary>
+    [ObservableProperty] private bool isSwitchingDish;
+
+    public Visibility SwitchingVisibility =>
+        IsSwitchingDish ? Visibility.Visible : Visibility.Collapsed;
+
+    partial void OnIsSwitchingDishChanged(bool value) =>
+        OnPropertyChanged(nameof(SwitchingVisibility));
 #pragma warning restore MVVMTK0045
 
     public ObservableCollection<string> DishNames { get; } = new();
@@ -167,6 +177,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     private bool _syncingEditor;
     private bool _hasSpeedResult;
     private List<TimelineRow> _timelineAll = new();
+    private int _switchGen;
 
     public string EndpointText => _activeEndpoint.EndpointText;
 
@@ -286,6 +297,19 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     /// editor shows the error. Never throws: this runs on the UI thread.</returns>
     private bool SwitchTo(DishEndpointOptions ep)
     {
+        // Serialized: overlapping switches race disposal against in-flight
+        // polls. The shell overlay + callers hold users off; this is the lock.
+        if (IsSwitchingDish) return false;
+        IsSwitchingDish = true;
+        int gen = ++_switchGen;
+        // Upper bound on the block: unreachable dishes hang polls past TCP
+        // timeouts, so never trap the user behind the overlay forever.
+        _ = Task.Run(async () =>
+        {
+            try { await Task.Delay(TimeSpan.FromSeconds(12)).ConfigureAwait(false); }
+            catch { }
+            _dq.TryEnqueue(() => { if (gen == _switchGen) IsSwitchingDish = false; });
+        });
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
@@ -306,6 +330,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
                 Start();
             }
             catch { }
+            IsSwitchingDish = false;
             return false;
         }
         _activeEndpoint = ep;
@@ -321,6 +346,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     partial void OnSelectedDishNameChanged(string value)
     {
         if (_syncingEditor) return;
+        if (IsSwitchingDish)
+        {
+            // Picked mid-switch: snap the combo back to the dish in force.
+            OnPropertyChanged(nameof(SelectedDishName));
+            return;
+        }
         var ep = _endpoints.FirstOrDefault(e => e.Name == value);
         if (ep is null || ep.Name == _activeEndpoint.Name)
         {
@@ -366,6 +397,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void RemoveDish()
     {
+        if (IsSwitchingDish) return;
         if (_endpoints.Count <= 1)
         {
             EditorError(Text.Get("dishes.err.last"));
@@ -701,10 +733,15 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     private async Task PollAsync(CancellationToken ct)
     {
+        int gen = _switchGen;
         try { await _poller.PollOnceAsync(ct).ConfigureAwait(false); }
         catch (OperationCanceledException) { }
         catch { /* fallback snapshot still delivered via Latest */ }
         var snap = _poller.Latest;
+        // First poll of the current switch generation settles it, even when it
+        // yields no snapshot; stale loops carry an older gen and must not
+        // clear a newer switch.
+        _dq.TryEnqueue(() => { if (gen == _switchGen) IsSwitchingDish = false; });
         if (snap is null) return;
         var fallback = _poller.UsingFallback;
         var err = _poller.LastError;
