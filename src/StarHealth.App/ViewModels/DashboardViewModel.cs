@@ -281,7 +281,10 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         return new DishPollingService(primary, _fallbackClient);
     }
 
-    private void SwitchTo(DishEndpointOptions ep)
+    /// <returns>False when the endpoint can't even be constructed (malformed
+    /// address slipped past validation): the active dish keeps polling and the
+    /// editor shows the error. Never throws: this runs on the UI thread.</returns>
+    private bool SwitchTo(DishEndpointOptions ep)
     {
         _cts?.Cancel();
         _cts?.Dispose();
@@ -289,13 +292,30 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         _loop = null;
         _primaryClient?.Dispose();
         _primaryClient = null;
+        DishPollingService poller;
+        try
+        {
+            poller = CreatePoller(ep);
+        }
+        catch
+        {
+            EditorError(Text.Get("dishes.err.host"));
+            try
+            {
+                _poller = CreatePoller(_activeEndpoint);
+                Start();
+            }
+            catch { }
+            return false;
+        }
         _activeEndpoint = ep;
-        _poller = CreatePoller(ep);
+        _poller = poller;
         SaveEndpoints();
         OnPropertyChanged(nameof(EndpointText));
         OnPropertyChanged(nameof(HasMultipleDishes));
         Start();
         _ = RefreshHistoryAsync();
+        return true;
     }
 
     partial void OnSelectedDishNameChanged(string value)
@@ -308,7 +328,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
             return;
         }
         PopulateEditor(ep);
-        SwitchTo(ep);
+        if (!SwitchTo(ep)) PopulateEditor(_activeEndpoint);
     }
 
     [RelayCommand]
@@ -355,7 +375,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         var next = _endpoints[0];
         RefreshDishNames();
         PopulateEditor(next);
-        SwitchTo(next);
+        if (!SwitchTo(next)) PopulateEditor(_activeEndpoint);
     }
 
     private bool ReadEditor(out DishEndpointOptions ep)

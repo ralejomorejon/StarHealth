@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- **Switching to a saved dish with a malformed host crashed the app.** Validation
+  accepted any non-empty host, so entries like `my dish`, `1.2.3.4:9200`, or
+  unbracketed IPv6 reached `GrpcChannel.ForAddress` on the UI thread, which
+  throws `UriFormatException` (proven per-shape in a harness). Validation now
+  requires a well-formed `http://host:port/` URI; well-formed-but-unreachable
+  hosts stay valid (lazy connect → demo fallback). `SwitchTo` additionally
+  returns success/failure and rebuilds polling on the previous dish instead of
+  ever throwing, so a bad entry shows an editor error instead of closing.
 - **Switching dishes crashed the app.** `SwitchTo` cancelled AND disposed the
   old `CancellationTokenSource` while its polling loop was still mid-poll;
   when that loop then awaited `PeriodicTimer.WaitForNextTickAsync` with the

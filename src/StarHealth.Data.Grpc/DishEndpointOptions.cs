@@ -32,6 +32,18 @@ public static class DishEndpointValidation
             error = "port";
             return false;
         }
+        // GrpcChannel.ForAddress throws on malformed URIs (UI-thread crash on
+        // switch). Block everything that can't form one: inner whitespace, an
+        // embedded port ("1.2.3.4:9200"), unbracketed IPv6, illegal chars.
+        // Unreachable-but-well-formed hosts stay valid: connect is lazy and
+        // falls back to demo data at poll time.
+        if (host.Any(char.IsWhiteSpace)
+            || !Uri.TryCreate($"http://{host}:{port}/", UriKind.Absolute, out var uri)
+            || uri.HostNameType == UriHostNameType.Unknown)
+        {
+            error = "host";
+            return false;
+        }
         error = null;
         return true;
     }
