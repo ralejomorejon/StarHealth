@@ -88,27 +88,27 @@
         </NavigationView>
 
         <!-- Dish-switch curtain: blocks all input until the first poll of the
-             new dish lands (or a timeout releases it). Primitives only. -->
-        <Border
+             new dish lands (or a timeout releases it). -->
+        <StackPanel
             Grid.RowSpan="2"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            Background="#CC0B0D10"
-            Visibility="{x:Bind Vm.SwitchingVisibility, Mode=OneWay}">
+            Visibility="{x:Bind Vm.SwitchingVisibility, Mode=OneWay}"
+            Background="#CC0B0D10">
             <StackPanel
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Spacing="12">
-                <ProgressRing
-                    Width="44"
-                    Height="44"
+                <TextBlock
+                    FontSize="28"
                     HorizontalAlignment="Center"
-                    IsActive="True" />
+                    Foreground="White"
+                    Text="···" />
                 <TextBlock
                     HorizontalAlignment="Center"
                     Foreground="White"
                     Text="{x:Bind Vm.Tr('dishes.switching'), Mode=OneWay}" />
             </StackPanel>
-        </Border>
+        </StackPanel>
     </Grid>
 </Page>

@@ -302,13 +302,14 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         if (IsSwitchingDish) return false;
         IsSwitchingDish = true;
         int gen = ++_switchGen;
+        App.Marker($"switch-begin gen={gen} name={ep.Name} host={ep.Host}");
         // Upper bound on the block: unreachable dishes hang polls past TCP
         // timeouts, so never trap the user behind the overlay forever.
         _ = Task.Run(async () =>
         {
             try { await Task.Delay(TimeSpan.FromSeconds(12)).ConfigureAwait(false); }
             catch { }
-            _dq.TryEnqueue(() => { if (gen == _switchGen) IsSwitchingDish = false; });
+            _dq.TryEnqueue(() => { if (gen == _switchGen) { IsSwitchingDish = false; App.Marker($"switch-timeout gen={gen}"); } });
         });
         _cts?.Cancel();
         _cts?.Dispose();
@@ -335,11 +336,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         }
         _activeEndpoint = ep;
         _poller = poller;
+        App.Marker($"switch-poller gen={gen}");
         SaveEndpoints();
         OnPropertyChanged(nameof(EndpointText));
         OnPropertyChanged(nameof(HasMultipleDishes));
         Start();
         _ = RefreshHistoryAsync();
+        App.Marker($"switch-ui gen={gen}");
         return true;
     }
 
@@ -741,7 +744,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         // First poll of the current switch generation settles it, even when it
         // yields no snapshot; stale loops carry an older gen and must not
         // clear a newer switch.
-        _dq.TryEnqueue(() => { if (gen == _switchGen) IsSwitchingDish = false; });
+        _dq.TryEnqueue(() => { if (gen == _switchGen) { IsSwitchingDish = false; App.Marker($"switch-settled gen={gen}"); } });
         if (snap is null) return;
         var fallback = _poller.UsingFallback;
         var err = _poller.LastError;

@@ -38,6 +38,18 @@ public partial class App : Application
         catch { }
     }
 
+    /// <summary>Plain-text stage marker in the same log: when a native crash
+    /// leaves no managed trace, the last marker names the stage it died in.</summary>
+    internal static void Marker(string text)
+    {
+        try
+        {
+            File.AppendAllText(Path.Combine(LocalData.FolderPath(), "crash.log"),
+                $"[{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}] MARK {text}\n");
+        }
+        catch { }
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         try { Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Register(); }
