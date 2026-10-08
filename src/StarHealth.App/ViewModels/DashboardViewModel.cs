@@ -746,7 +746,14 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         var fallback = _poller.UsingFallback;
         var err = _poller.LastError;
         _ = _store.RecordAsync(_activeEndpoint.Name, snap);
-        _dq.TryEnqueue(() => Apply(snap, fallback, err));
+        // A malformed snapshot must never take the monitor down (notably right
+        // after a dish switch, when the new endpoint's first data arrives): log
+        // it to crash.log and keep the last good frame on screen.
+        _dq.TryEnqueue(() =>
+        {
+            try { Apply(snap, fallback, err); }
+            catch (Exception ex) { App.CrashLog(ex); }
+        });
         if (++_pollCount % 10 == 0 && HistoryRange != 0)
             await RefreshHistoryAsync().ConfigureAwait(false);
     }

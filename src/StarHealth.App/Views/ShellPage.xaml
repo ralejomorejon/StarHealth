@@ -39,7 +39,7 @@
                     <TextBlock
                         HorizontalAlignment="Right"
                         Style="{StaticResource DishSubValue}"
-                        Text="{x:Bind Vm.EndpointText}" />
+                        Text="{x:Bind Vm.EndpointText, Mode=OneWay}" />
                     <TextBlock
                         HorizontalAlignment="Right"
                         Style="{StaticResource DishSubValue}"
