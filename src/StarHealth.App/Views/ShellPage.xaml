@@ -16,13 +16,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Cabecera de escritorio: plan + modelo a la izquierda, estado a la derecha -->
-        <Grid Padding="24,16,24,12" ColumnSpacing="16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel Spacing="0">
+        <!-- Cabecera de escritorio: plan + modelo a la izquierda; píldora de estado
+             centrada sobre el área de contenido (no sobre la ventana completa). -->
+        <Grid>
+            <StackPanel Padding="24,16,24,12" Spacing="0">
                 <TextBlock
                     FontSize="22"
                     FontWeight="SemiBold"
@@ -30,33 +27,87 @@
                     Text="{x:Bind Vm.HeaderTitle, Mode=OneWay}" />
                 <TextBlock Style="{StaticResource DishSubValue}" Text="{x:Bind Vm.HeaderSub, Mode=OneWay}" />
             </StackPanel>
-            <StackPanel
-                Grid.Column="1"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal"
-                Spacing="10">
-                <StackPanel VerticalAlignment="Center" Spacing="0">
-                    <TextBlock
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource DishSubValue}"
-                        Text="{x:Bind Vm.EndpointText, Mode=OneWay}" />
-                    <TextBlock
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource DishSubValue}"
-                        Text="{x:Bind Vm.LastUpdatedText, Mode=OneWay}" />
-                </StackPanel>
+            <!-- 248 = NavigationView.OpenPaneLength: el contenido vive a la derecha
+                 del rail, así que la píldora se centra en esa región. -->
+            <Grid Margin="248,16,0,12">
                 <Border
-                    Padding="10,4"
+                    Padding="22,12"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="{x:Bind Vm.BadgeBrush, Mode=OneWay}"
-                    CornerRadius="10">
-                    <TextBlock
-                        FontSize="11"
-                        FontWeight="Bold"
-                        Foreground="Black"
-                        Text="{x:Bind Vm.BadgeText, Mode=OneWay}" />
+                    Background="#FF15171C"
+                    BorderBrush="#FF2B2F38"
+                    BorderThickness="1"
+                    CornerRadius="25">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Grid
+                            Width="26"
+                            Height="26"
+                            VerticalAlignment="Center">
+                            <Ellipse
+                                Width="26"
+                                Height="26"
+                                Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}"
+                                Opacity="0.07" />
+                            <Ellipse
+                                Width="19"
+                                Height="19"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}"
+                                Opacity="0.14" />
+                            <Ellipse
+                                Width="13"
+                                Height="13"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}"
+                                Opacity="0.28" />
+                            <Ellipse
+                                Width="7"
+                                Height="7"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="{x:Bind Vm.BadgeBrush, Mode=OneWay}" />
+                        </Grid>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Foreground="{x:Bind Vm.BadgeBrush, Mode=OneWay}"
+                            Text="{x:Bind Vm.BadgeText, Mode=OneWay}" />
+                        <Border
+                            Width="1"
+                            Height="16"
+                            VerticalAlignment="Center"
+                            Background="#FF363B46" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="#FFE8EAEE"
+                            Text="StarHealth" />
+                        <Border
+                            Width="1"
+                            Height="16"
+                            VerticalAlignment="Center"
+                            Background="#FF363B46" />
+                        <TextBlock VerticalAlignment="Center" FontSize="14">
+                            <Run Foreground="#FF8B909B" Text="{x:Bind Vm.Tr('misc.diship'), Mode=OneWay}" />
+                            <Run Foreground="#FF8B909B" Text=": " />
+                            <Run Foreground="#FFC9CDD6" Text="{x:Bind Vm.BadgeEndpointText, Mode=OneWay}" />
+                        </TextBlock>
+                        <Border
+                            Width="1"
+                            Height="16"
+                            VerticalAlignment="Center"
+                            Background="#FF363B46" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="#FF9BA1AC"
+                            Text="{x:Bind Vm.LastUpdatedText, Mode=OneWay}" />
+                    </StackPanel>
                 </Border>
-            </StackPanel>
+            </Grid>
         </Grid>
 
         <NavigationView

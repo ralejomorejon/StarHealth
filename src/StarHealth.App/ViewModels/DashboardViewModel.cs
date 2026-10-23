@@ -181,6 +181,9 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
 
     public string EndpointText => _activeEndpoint.EndpointText;
 
+    /// <summary>Compact host:port for the centered shell status pill.</summary>
+    public string BadgeEndpointText => $"{_activeEndpoint.Host}:{_activeEndpoint.DishPort}";
+
 #pragma warning disable MVVMTK0045
     [ObservableProperty] private string editName = "";
     [ObservableProperty] private string editHost = "";
@@ -339,6 +342,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
         App.Marker($"switch-poller gen={gen}");
         SaveEndpoints();
         OnPropertyChanged(nameof(EndpointText));
+        OnPropertyChanged(nameof(BadgeEndpointText));
         OnPropertyChanged(nameof(HasMultipleDishes));
         Start();
         _ = RefreshHistoryAsync();
@@ -999,7 +1003,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDisposable
             ChartMax = Math.Max(50, s.History.Select(p => p.DownMbps).DefaultIfEmpty(50).Max() * 1.2);
         }
 
-        LastUpdatedText = Text.Get("misc.updated") + " " + s.Timestamp.LocalDateTime.ToString("HH:mm:ss");
+        LastUpdatedText = Text.Get("misc.updated") + ": " + s.Timestamp.LocalDateTime.ToString("HH:mm:ss");
         LastErrorText = error ?? "";
         ErrorVisibility = string.IsNullOrEmpty(error) ? Visibility.Collapsed : Visibility.Visible;
 

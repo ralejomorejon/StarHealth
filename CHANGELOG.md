@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [v0.1.9-alpha] - 2026-10-22
+
+### Changed
+- **Redesigned status pill, centered over the content column.** The old
+  LIVE/DEMO badge and endpoint/updated text on the right are replaced by a
+  single dark pill at the top middle of the shell: softly glowing status dot,
+  StarHealth, dish IP and last-update time, with 14 px type. It centers over
+  the page content (right of the 248 px nav rail) rather than the window, and
+  the dot glow fades across four layers instead of a hard-edged halo.
+
 ### Fixed
+- **Picking a dish while its dropdown was open closed the app.** The deferred
+  combo resync could still land while the popup was closing, and mutating
+  `ComboBox.Items` then faults the native control with `E_NOTFOUND`
+  (0x80070490, no managed stack) — reproduced headlessly, 1/1. The resync now
+  skips while the dropdown is open: the pick already set the selection, so
+  nothing is lost.
+- **Native crash from the switching curtain.** The `ProgressRing` and the
+  Border-hosted overlay were replaced by plain primitives in a `StackPanel`,
+  and `switch-begin` / `switch-poller` / `switch-ui` / `switch-settled` /
+  `switch-timeout` stage markers now land in `crash.log` so a native death
+  without a managed stack still names its stage.
 - **Second dish switch closed the app instantly.** The dish `ComboBox` was
   resynced synchronously from inside its own `SelectionChanged` cascade
   (pick → viewmodel switch → property change → `Items.Clear`/re-add), which

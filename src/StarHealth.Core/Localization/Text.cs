@@ -224,6 +224,8 @@ public static class Text
         ["misc.out.summary"] = ("{0} interrupciones · {1} en total", "{0} outages · {1} total"),
         ["spd.fail"] = ("No se pudo completar: ", "Couldn't complete: "),
         ["misc.updated"] = ("Actualizado", "Updated"),
+        ["misc.diship"] = ("IP de la antena", "Dish IP"),
+        ["widget.title"] = ("Estadísticas", "Widget Statistics"),
         ["misc.connecting"] = ("Conectando…", "Connecting…"),
         ["misc.looking"] = ("Buscando la antena en tu red local", "Looking for the dish on your LAN"),
         ["misc.demo"] = ("Datos de demostración · antena inalcanzable en la red", "Demo data · dish unreachable on the LAN"),

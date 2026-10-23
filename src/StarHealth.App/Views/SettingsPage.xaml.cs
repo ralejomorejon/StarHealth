@@ -63,6 +63,10 @@ public sealed partial class SettingsPage : Page
     private void SyncDishBox()
     {
         if (!_pageActive || Vm is null) return;
+        // Do not mutate the combo's Items collection while its dropdown
+        // popup is open: the native bridge (CsWinRT) raises E_NOTFOUND
+        // (0x80070490) when Items.Clear() runs inside an open popup.
+        if (DishBox != null && DishBox.IsDropDownOpen) return;
         _syncDish = true;
         try
         {
